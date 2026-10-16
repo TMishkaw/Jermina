@@ -56,7 +56,14 @@ class WikiEngine:
             <li><strong>Векторна пам'ять (pgvector):</strong> Накопичення досвіду експериментів, помилок парсингу та патернів успішних сценаріїв.</li>
         </ul>
 
-        <h2>4. Інтерактивні посилання</h2>
+        <h2>4. Model Context Protocol (MCP) Інтеграція</h2>
+        <ul>
+            <li><strong>Воркспейс-конфіг:</strong> <code>.agents/mcp_config.json</code> для нативних AI-інструментів.</li>
+            <li><strong>postgres-jemini:</strong> Пряма інспекція бази даних PostgreSQL та таблиць пам'яті агентів без ручного введення запитів.</li>
+            <li><strong>github:</strong> Автономне відкриття GitHub Issues для багів та генерація Pull Requests.</li>
+        </ul>
+
+        <h2>5. Інтерактивні посилання</h2>
         <ul>
             <li><a href="/docs">Інтерактивна OpenAPI документація (Swagger UI)</a></li>
             <li><a href="/redoc">ReDoc документація</a></li>
