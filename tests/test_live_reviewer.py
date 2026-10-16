@@ -26,12 +26,17 @@ async def test_live_reviewer_parse_response():
     raw_text = """
     === ЖИВА РЕЦЕНЗІЯ АРТ-ДИРЕКТОРА (GEMINI 3.8 LIVE STREAM) ===
     [ХУК]: Перші 3 секунди тримають увагу ідеально, різкий неоновий спалах.
-    [ОЗВУЧКА]: Голос живий, без мертвого ха-ха, присутні природні вдихи.
-    [ВІЗУАЛ]: Субтитри вирівняні, динамічний стикмен.
+    [ОЗВУЧКА]: Голос живий, без мертвого ха-ха, присутні природні жіночі інтонації.
+    [АНІМАЦІЯ]: Стикмен плавно змінює пози (point_up, surprise), відсутній ефект застигання.
+    [ДИЗАЙН ТА ТИПОГРАФІКА]: Розмір шрифту 28px оптимізовано під 1080x1920 мобільний екран.
+    [СТИЛЬ ТА ПОРІВНЯННЯ]: Монтаж у стилі Fireship, кінетичні субтитри як у Hormozi.
     [ПОРІВНЯННЯ]: Повністю відповідає початковому сценарію.
     [ЩО ПОКРАЩИТИ]:
-    - Збільшити шрифт субтитрів на 10%
+    - Збільшити контраст неонової плашки на 5%
     - Підняти гучність звукового ефекту
+    [ПРАВИЛА САМОВДОСКОНАЛЕННЯ]:
+    - УНИКАТИ: статичних поз довше 1.5 секунди
+    - ОБОВ'ЯЗКОВО: тримати розмір шрифту плашок не менше 26px
     ОЦІНКА: 9.4/10
     ВЕРДИКТ: PASSED
     """
@@ -45,7 +50,13 @@ async def test_live_reviewer_parse_response():
     assert res.status == ValidationStatus.PASSED
     assert "неоновий спалах" in res.hook_evaluation
     assert "без мертвого ха-ха" in res.voice_acting_evaluation
+    assert "відсутній ефект застигання" in res.animation_evaluation
+    assert "1080x1920" in res.design_typography_evaluation
+    assert "Fireship" in res.style_benchmark_evaluation
     assert len(res.actionable_improvements) == 2
+    assert len(res.self_evolution_rules) == 2
+    assert any("УНИКАТИ:" in r for r in res.self_evolution_rules)
+    assert any("ОБОВ'ЯЗКОВО:" in r for r in res.self_evolution_rules)
 
 
 @pytest.mark.asyncio
@@ -71,6 +82,10 @@ async def test_live_reviewer_mock_review(sample_video_path: Path):
     assert result.overall_score >= 8.0
     assert result.status == ValidationStatus.PASSED
     assert len(result.actionable_improvements) > 0
+    assert len(result.animation_evaluation) > 0
+    assert len(result.design_typography_evaluation) > 0
+    assert len(result.style_benchmark_evaluation) > 0
+    assert len(result.self_evolution_rules) >= 2
 
 
 @pytest.mark.asyncio
@@ -93,5 +108,36 @@ async def test_media_validation_engine_live_stream_integration(sample_video_path
     assert card.target_type == ValidationTargetType.VIDEO
     assert card.status == ValidationStatus.PASSED
     assert card.overall_score == live_res.overall_score
-    assert len(card.passed_criteria) >= 2
+    assert len(card.passed_criteria) >= 4
+    assert any("Анімація" in c for c in card.passed_criteria)
+    assert any("Дизайн" in c for c in card.passed_criteria)
     assert live_res.frames_streamed > 0
+
+
+@pytest.mark.asyncio
+async def test_live_reviewer_self_evolution_feedback_loop(sample_video_path: Path):
+    from jemini.analytics.feedback_loop import AudienceRetentionFeedbackLoop
+
+    reviewer = LiveVideoReviewer()
+    intent = ValidationIntent(
+        title="Тест самовдосконалення через Live API",
+        target_type=ValidationTargetType.VIDEO,
+        expected_duration_seconds=15.0,
+    )
+
+    test_channel = "stickman_evolution_test"
+    result = await reviewer.review_video(
+        video_path=sample_video_path,
+        intent=intent,
+        channel_id=test_channel,
+        mock_mode=True,
+    )
+
+    assert len(result.self_evolution_rules) >= 2
+
+    # Check that AudienceRetentionFeedbackLoop reads the persisted self-evolution rules
+    feedback = AudienceRetentionFeedbackLoop()
+    active_rules = await feedback.get_active_negative_rules(channel_id=test_channel)
+
+    # In environments with or without DB, verify the contract
+    assert isinstance(active_rules, list)

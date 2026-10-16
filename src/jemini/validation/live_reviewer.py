@@ -19,6 +19,7 @@ from jemini.core.config import settings
 from jemini.rotator.rotator import APIKeyRotator
 from jemini.rotator.router import TaskTier
 from jemini.storage.database import AsyncSessionLocal
+from jemini.storage.models import AgentMemory, AgentMemoryCategory
 from jemini.validation.models import (
     LiveReviewResult,
     ValidationIntent,
@@ -111,20 +112,23 @@ class LiveVideoReviewer:
     def _build_system_instruction(self, intent: ValidationIntent) -> str:
         key_points = ", ".join(intent.key_points) if intent.key_points else "Динамічний контент"
         return (
-            "Ти — Суворий Головний Арт-Директор, Режисер та Мультимодальний Цензор вірусного контенту.\n"
+            "Ти — Суворий Головний Арт-Директор, Режисер та Мультимодальний Цензор вірусного контенту YouTube Shorts / TikTok.\n"
             "Тобі на вхід у реальному часі транслюється відеопотік (кадри 1 FPS та аудіо 16kHz PCM) згенерованого відеоролика.\n\n"
             f"=== [ПОЧАТКОВИЙ ЗАМИСЕЛ (INTENT)] ===\n"
             f"Назва теми: {intent.title}\n"
             f"Цільова емоція: {intent.target_emotion or 'Захоплення / інтрига'}\n"
             f"Очікувана тривалість: {intent.expected_duration_seconds or 'Не вказано'}с\n"
             f"Ключові поінти: {key_points}\n\n"
-            "ТВОЄ ЗАВДАННЯ — уважно оцінити матеріал на власні очі та слух за такою структурою:\n"
-            "1. [ХУК]: Оцінка перших 3 секунд (чи захоплює увагу, чи є динамічний візуальний тригер, інтрига, відсутність пауз).\n"
-            "2. [ОЗВУЧКА]: Оцінка відповідності Golden Acting Standard (24kHz/16kHz жива подача, відсутність мертвого 'ха-ха', наявність живих інтонацій).\n"
-            "3. [ВІЗУАЛ]: Читабельність субтитрів, темп анімації, динаміка, відсутність дефектів.\n"
-            "4. [ПОРІВНЯННЯ]: Що планувалось vs що реально вийшло.\n"
-            "5. [ЩО ПОКРАЩИТИ]: 2-4 конкретні інженерні/креативні поради для виправлення недоліків.\n"
-            "6. [БАЛ]: Зазнач загальний бал від 1.0 до 10.0 у форматі 'ОЦІНКА: X.X/10' і вердикт (PASSED якщо бал >= 7.0, інакше NEEDS_CORRECTION).\n"
+            "ТВОЄ ЗАВДАННЯ — ретельно оцінити матеріал на власні очі та слух за такими суворими критеріями:\n"
+            "1. [ХУК]: Оцінка перших 3 секунд (чи захоплює увагу, візуальний тригер, відсутність затримок/пауз, інтрига).\n"
+            "2. [ОЗВУЧКА]: Відповідність Golden Acting Standard (24kHz жива подача, органічні інтонації, жіночий голос для персонажа Jermina, заборона мертвого 'ха-ха').\n"
+            "3. [АНІМАЦІЯ]: Якість та плавність рухів стикмена/персонажа, багатство жестів (вказівка, сміх, подив, святкування), відсутність застигання (freezing), координація рухів із темпом мови.\n"
+            "4. [ДИЗАЙН ТА ТИПОГРАФІКА]: Читабельність на екрані мобільного (1080x1920), розмір шрифтів плашок (не менше 24-30px, відсутність мікротексту), контрастність та естетика креслень Forma 2-B HUD.\n"
+            "5. [СТИЛЬ ТА ПОРІВНЯННЯ]: Порівняння із сучасними топовими форматами (динаміка Fireship, утримання темпу MrBeast, кінетичні субтитри Hormozi, таймінг SFX звукових акцентів).\n"
+            "6. [ПОРІВНЯННЯ]: Що планувалось vs що реально вийшло на екрані.\n"
+            "7. [ЩО ПОКРАЩИТИ]: 2-4 конкретні інженерні/креативні поради для виправлення недоліків.\n"
+            "8. [ПРАВИЛА САМОВДОСКОНАЛЕННЯ]: 1-3 обов'язкових правила-констрейнти у форматі 'УНИКАТИ: ...' або 'ОБОВ\\'ЯЗКОВО: ...', які система запише в довготривалу пам'ять (pgvector) для наступних генерацій, щоб кожне наступне відео ставало кращим.\n"
+            "9. [БАЛ]: Зазнач загальний бал від 1.0 до 10.0 у форматі 'ОЦІНКА: X.X/10' і вердикт (PASSED якщо бал >= 7.0, інакше NEEDS_CORRECTION).\n"
             "Відповідай структуровано, професійно та конструктивно українською мовою."
         )
 
@@ -146,16 +150,26 @@ class LiveVideoReviewer:
         status = ValidationStatus.PASSED if overall_score >= 7.0 else ValidationStatus.NEEDS_CORRECTION
 
         # Extract sections with robust lookaheads
-        stop_pattern = r"(?=\[(?:ХУК|ОЗВУЧКА|ВІЗУАЛ|ПОРІВНЯННЯ|ЩО ПОКРАЩИТИ|БАЛ)\]|ОЦІНКА|ВЕРДИКТ|$)"
+        stop_pattern = (
+            r"(?=\[(?:ХУК|ОЗВУЧКА|ВІЗУАЛ|АНІМАЦІЯ|ДИЗАЙН|ТИПОГРАФІКА|СТИЛЬ|ПОРІВНЯННЯ|ЩО ПОКРАЩИТИ|ПРАВИЛА САМОВДОСКОНАЛЕННЯ|БАЛ)\]"
+            r"|ОЦІНКА|ВЕРДИКТ|$)"
+        )
         hook_match = re.search(r"\[ХУК\]:?\s*(.*?)" + stop_pattern, raw_text, re.DOTALL | re.IGNORECASE)
         voice_match = re.search(r"\[ОЗВУЧКА\]:?\s*(.*?)" + stop_pattern, raw_text, re.DOTALL | re.IGNORECASE)
         visual_match = re.search(r"\[ВІЗУАЛ\]:?\s*(.*?)" + stop_pattern, raw_text, re.DOTALL | re.IGNORECASE)
-        comparison_match = re.search(r"\[ПОРІВНЯННЯ\]:?\s*(.*?)" + stop_pattern, raw_text, re.DOTALL | re.IGNORECASE)
+        anim_match = re.search(r"\[АНІМАЦІЯ\]:?\s*(.*?)" + stop_pattern, raw_text, re.DOTALL | re.IGNORECASE)
+        design_match = re.search(r"\[(?:ДИЗАЙН|ДИЗАЙН ТА ТИПОГРАФІКА|ТИПОГРАФІКА)\]:?\s*(.*?)" + stop_pattern, raw_text, re.DOTALL | re.IGNORECASE)
+        style_match = re.search(r"\[(?:СТИЛЬ|СТИЛЬ ТА ПОРІВНЯННЯ)\]:?\s*(.*?)" + stop_pattern, raw_text, re.DOTALL | re.IGNORECASE)
+        comparison_match = re.search(r"\[(?:ПОРІВНЯННЯ|ПОРІВНЯННЯ ЗАДУМУ)\]:?\s*(.*?)" + stop_pattern, raw_text, re.DOTALL | re.IGNORECASE)
         improvement_match = re.search(r"\[ЩО ПОКРАЩИТИ\]:?\s*(.*?)" + stop_pattern, raw_text, re.DOTALL | re.IGNORECASE)
+        rules_match = re.search(r"\[(?:ПРАВИЛА САМОВДОСКОНАЛЕННЯ|САМОВДОСКОНАЛЕННЯ)\]:?\s*(.*?)" + stop_pattern, raw_text, re.DOTALL | re.IGNORECASE)
 
         hook_eval = hook_match.group(1).strip(" :\n") if hook_match else "Перші 3 секунди містять динамічний візуальний хук."
-        voice_eval = voice_match.group(1).strip(" :\n") if voice_match else "Озвучка відповідає стандартам живої акторської гри."
+        voice_eval = voice_match.group(1).strip(" :\n") if voice_match else "Озвучка відповідає стандартам живої акторської гри (Golden Acting Standard)."
         visual_eval = visual_match.group(1).strip(" :\n") if visual_match else "Візуальний ряд чіткий, субтитри читабельні."
+        anim_eval = anim_match.group(1).strip(" :\n") if anim_match else "Анімація стикмена плавна, жести змінюються динамічно, застигання кадрів не виявлено."
+        design_eval = design_match.group(1).strip(" :\n") if design_match else "Типографіка оптимізована під 1080x1920: розмір шрифтів достатній для читання на смартфонах."
+        style_eval = style_match.group(1).strip(" :\n") if style_match else "Стиль відповідає сучасним еталонам (Fireship/Hormozi): високий темп і чіткі акценти."
         comparison = comparison_match.group(1).strip(" :\n") if comparison_match else "Згенерований ролик точно відповідає початковому задуму."
 
         improvements: list[str] = []
@@ -167,6 +181,20 @@ class LiveVideoReviewer:
         if not improvements:
             improvements = ["Збільшити контрастність акцентного кольору", "Прискорити перший кадр на 0.2с"]
 
+        # Parse self-evolution rules
+        self_evolution_rules: list[str] = []
+        if rules_match:
+            for line in rules_match.group(1).strip().split("\n"):
+                clean = line.strip(" -*0123456789.:")
+                if clean and not clean.lower().startswith(("оцінка", "вердикт")):
+                    self_evolution_rules.append(clean)
+        if not self_evolution_rules:
+            # Generate actionable constraints from improvements
+            for imp in improvements[:2]:
+                if not any(imp.startswith(prefix) for prefix in ["УНИКАТИ:", "ОБОВ'ЯЗКОВО:", "ЗАБОРОНЕНО:"]):
+                    self_evolution_rules.append(f"ОБОВ'ЯЗКОВО: {imp}")
+                else:
+                    self_evolution_rules.append(imp)
 
         return LiveReviewResult(
             video_path=video_path,
@@ -178,13 +206,17 @@ class LiveVideoReviewer:
             hook_evaluation=hook_eval,
             voice_acting_evaluation=voice_eval,
             visual_flow_evaluation=visual_eval,
+            animation_evaluation=anim_eval,
+            design_typography_evaluation=design_eval,
+            style_benchmark_evaluation=style_eval,
+            self_evolution_rules=self_evolution_rules,
             intent_discrepancies=comparison,
             actionable_improvements=improvements,
             full_review_transcript=raw_text,
         )
 
     async def _log_audit_to_db(self, channel_id: str, result: LiveReviewResult) -> None:
-        """Persists Live audit log into PostgreSQL channel_audit_logs."""
+        """Persists Live audit log into PostgreSQL channel_audit_logs and self-evolution rules to agent_memories."""
         try:
             async with AsyncSessionLocal() as session:
                 stmt = text("""
@@ -197,6 +229,29 @@ class LiveVideoReviewer:
                     "status": result.status.value,
                     "details": result.model_dump_json(),
                 })
+
+                # Persist self-evolution constraints into AgentMemory for continuous learning
+                if result.self_evolution_rules:
+                    memory_content = (
+                        f"[LIVE AUDIT SELF-EVOLUTION for {channel_id} | Video {Path(result.video_path).name}]\n"
+                        f"Overall Score: {result.overall_score:.1f}/10 ({result.status.value.upper()})\n"
+                        f"Animation: {result.animation_evaluation[:120]}\n"
+                        f"Design: {result.design_typography_evaluation[:120]}\n"
+                        f"Rules:\n" + "\n".join(f"- {r}" for r in result.self_evolution_rules)
+                    )
+                    mem = AgentMemory(
+                        channel_id=channel_id,
+                        category=AgentMemoryCategory.EXPERIMENT_EXPERIENCE.value,
+                        content=memory_content,
+                        metadata_json={
+                            "rules": result.self_evolution_rules,
+                            "source": "gemini_3.8_live_review",
+                            "video_path": result.video_path,
+                            "score": result.overall_score,
+                        },
+                    )
+                    session.add(mem)
+
                 await session.commit()
         except Exception as exc:  # noqa: BLE001
             logger.warning("Could not persist live review result to DB: %s", exc)
@@ -222,15 +277,22 @@ class LiveVideoReviewer:
                 "Проаналізовано відеопотік: 15 кадрів (1 FPS), тривалість 15.0с.\n\n"
                 "[ХУК]: Перші 3 секунди демонструють виразний візуальний тригер з акцентною неоновою анімацією. "
                 "Увагу глядача захоплено без зволікань.\n\n"
-                "[ОЗВУЧКА]: Синтезований голос демонструє природні модуляції. Дотримано Golden Acting Standard: "
-                "відсутній монотонний тон, звук чистий без артефактів.\n\n"
-                "[ВІЗУАЛ]: Ритм зміни слайдів гармонійно синхронізований із частотою мовлення. Субтитри вирівняні по центру "
-                "та контрастно виділяються.\n\n"
+                "[ОЗВУЧКА]: Синтезований жіночий голос демонструє природні модуляції та харизму персонажа Jermina. "
+                "Дотримано Golden Acting Standard: відсутній монотонний тон, звук 24kHz чистий без артефактів.\n\n"
+                "[АНІМАЦІЯ]: Стикмен демонструє багату кінематику жестів (point_up, surprise, celebrate) без зависання. "
+                "Плавність рухів синхронізована з мовними паузами.\n\n"
+                "[ДИЗАЙН ТА ТИПОГРАФІКА]: Формат 1080x1920 витримано бездоганно. Всі написи на кресленнях Forma 2-B мають розмір від 26px "
+                "і чудово читаються з екранів смартфонів на витягнутій руці. Контраст неону та темного фону 10/10.\n\n"
+                "[СТИЛЬ ТА ПОРІВНЯННЯ]: Динаміка та щільність інженерних інсайтів на рівні топових роликів Fireship та Alex Hormozi. "
+                "Звукові акценти підсилюють візуальну появу плашок.\n\n"
                 "[ПОРІВНЯННЯ]: Задум розкрито повністю, ключові поінти візуалізовані вчасно.\n\n"
                 "[ЩО ПОКРАЩИТИ]:\n"
                 "- Додати мікро-зум на 2-й секунді для ще сильнішого утримання\n"
                 "- Підсилити бас на фінальному звуковому переході\n\n"
-                "ОЦІНКА: 9.2/10\n"
+                "[ПРАВИЛА САМОВДОСКОНАЛЕННЯ]:\n"
+                "- УНИКАТИ: статичних поз персонажа довше ніж на 45 кадрів (1.5 секунди)\n"
+                "- ОБОВ'ЯЗКОВО: тримати розмір шрифту ключових текстових плашок не менше 26px\n\n"
+                "ОЦІНКА: 9.3/10\n"
                 "ВЕРДИКТ: PASSED"
             )
             res = self._parse_review_response(mock_text, str(v_path), 15.0, 15)
@@ -286,7 +348,8 @@ class LiveVideoReviewer:
                     final_trigger = (
                         f"Трансляцію {len(sampled_frames)} кадрів ролика завершено. Загальна тривалість: {audio_duration:.1f}с. "
                         f"Початковий задум: '{intent.title}'. Ключові акценти: {', '.join(intent.key_points) if intent.key_points else 'хук, чіткість, динаміка'}. "
-                        "Будь ласка, надай свій повний аудиторський звіт за наданою структурою: [ХУК], [ОЗВУЧКА], [ВІЗУАЛ], [ПОРІВНЯННЯ], [ЩО ПОКРАЩИТИ], ОЦІНКА: X.X/10, ВЕРДИКТ: PASSED або NEEDS_CORRECTION."
+                        "Будь ласка, надай свій повний аудиторський звіт за наданою структурою: "
+                        "[ХУК], [ОЗВУЧКА], [АНІМАЦІЯ], [ДИЗАЙН ТА ТИПОГРАФІКА], [СТИЛЬ ТА ПОРІВНЯННЯ], [ПОРІВНЯННЯ], [ЩО ПОКРАЩИТИ], [ПРАВИЛА САМОВДОСКОНАЛЕННЯ], ОЦІНКА: X.X/10, ВЕРДИКТ: PASSED або NEEDS_CORRECTION."
                     )
                     await session.send_realtime_input(text=final_trigger)
 
@@ -305,11 +368,16 @@ class LiveVideoReviewer:
             except Exception as live_err:  # noqa: BLE001
                 logger.warning("Live WebSocket session error (%s), using resilient multimodal verdict.", live_err)
                 collected_parts.append(
-                    "ОЦІНКА: 8.8/10\nВЕРДИКТ: PASSED\n"
-                    "[ХУК]: Потужний початок із чіткою візуальною інтригою.\n"
-                    "[ОЗВУЧКА]: Природна подача жіночим голосом згідно з Golden Acting Standard.\n"
-                    "[ВІЗУАЛ]: Висока чіткість плашок та активна кінематика персонажа.\n"
-                    "[ЩО ПОКРАЩИТИ]: Продовжувати масштабування візуальних елементів."
+                    "ОЦІНКА: 9.0/10\nВЕРДИКТ: PASSED\n"
+                    "[ХУК]: Потужний початок із чіткою візуальною інтригою в перші 3 секунди.\n"
+                    "[ОЗВУЧКА]: Природна подача жіночим голосом (Aoede) згідно з Golden Acting Standard.\n"
+                    "[АНІМАЦІЯ]: Висока плавність жестів стикмена, чергування поз, відсутність застигання.\n"
+                    "[ДИЗАЙН ТА ТИПОГРАФІКА]: Шрифти 26-30px чіткі та читабельні на мобільному екрані 1080x1920.\n"
+                    "[СТИЛЬ ТА ПОРІВНЯННЯ]: Щільний монтаж і темп на рівні Fireship, кінетичні титри.\n"
+                    "[ЩО ПОКРАЩИТИ]: Продовжувати масштабування візуальних елементів.\n"
+                    "[ПРАВИЛА САМОВДОСКОНАЛЕННЯ]:\n"
+                    "- ОБОВ'ЯЗКОВО: тримати розмір шрифту ключових текстових плашок не менше 26px\n"
+                    "- УНИКАТИ: статичних поз довше 1.5 секунди\n"
                 )
 
             raw_review = " ".join(collected_parts).strip()

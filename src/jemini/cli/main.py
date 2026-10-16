@@ -624,12 +624,21 @@ async def handle_review_live(
     print(f"  Audio Duration:     {result.audio_streamed_seconds:.2f}s (16kHz PCM)")
     print("-" * 80)
     print(f"  [1] 3-SECOND HOOK:\n      {result.hook_evaluation}")
-    print(f"  [2] VOICE & ACTING:\n      {result.voice_acting_evaluation}")
-    print(f"  [3] VISUAL FLOW:\n      {result.visual_flow_evaluation}")
-    print(f"  [4] INTENT ACCURACY:\n      {result.intent_discrepancies}")
-    print("  [5] ACTIONABLE IMPROVEMENTS:")
+    print(f"  [2] VOICE & ACTING (GOLDEN ACTING STANDARD):\n      {result.voice_acting_evaluation}")
+    if result.animation_evaluation:
+        print(f"  [3] ANIMATION & STICKMAN KINEMATICS:\n      {result.animation_evaluation}")
+    if result.design_typography_evaluation:
+        print(f"  [4] DESIGN & MOBILE TYPOGRAPHY (1080x1920):\n      {result.design_typography_evaluation}")
+    if result.style_benchmark_evaluation:
+        print(f"  [5] MODERN BENCHMARK COMPARISON (Fireship / Hormozi):\n      {result.style_benchmark_evaluation}")
+    print(f"  [6] INTENT ACCURACY:\n      {result.intent_discrepancies}")
+    print("  [7] ACTIONABLE IMPROVEMENTS:")
     for imp in result.actionable_improvements:
         print(f"      • {imp}")
+    if result.self_evolution_rules:
+        print("  [8] AUTONOMOUS SELF-EVOLUTION RULES (PERSISTED TO MEMORY):")
+        for rule in result.self_evolution_rules:
+            print(f"      [+] {rule}")
     print("=" * 80 + "\n")
 
 

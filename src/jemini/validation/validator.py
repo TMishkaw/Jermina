@@ -200,14 +200,22 @@ class MediaValidationEngine:
             mock_mode=mock_mode,
         )
 
+        passed_crit = [
+            f"Хук: {live_result.hook_evaluation[:80]}",
+            f"Озвучка: {live_result.voice_acting_evaluation[:80]}",
+        ]
+        if live_result.animation_evaluation:
+            passed_crit.append(f"Анімація: {live_result.animation_evaluation[:80]}")
+        if live_result.design_typography_evaluation:
+            passed_crit.append(f"Дизайн/Типографіка: {live_result.design_typography_evaluation[:80]}")
+        if live_result.style_benchmark_evaluation:
+            passed_crit.append(f"Еталон/Стиль: {live_result.style_benchmark_evaluation[:80]}")
+
         card = ValidationCard(
             target_type=intent.target_type,
             status=live_result.status,
             overall_score=live_result.overall_score,
-            passed_criteria=[
-                f"Хук: {live_result.hook_evaluation[:80]}",
-                f"Озвучка: {live_result.voice_acting_evaluation[:80]}",
-            ],
+            passed_criteria=passed_crit,
             detected_issues=[live_result.intent_discrepancies] if live_result.status != ValidationStatus.PASSED else [],
             actionable_recommendations=live_result.actionable_improvements,
             suggested_correction_prompt="; ".join(live_result.actionable_improvements) if live_result.actionable_improvements else None,
