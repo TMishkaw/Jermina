@@ -339,16 +339,22 @@ class TikTokPublisher:
         try:
             async with AsyncSessionLocal() as session:
                 query = text("""
-                    INSERT INTO channel_audit_logs (channel_id, log_type, message, metadata)
-                    VALUES (:cid, :ltype, :msg, :meta)
+                    INSERT INTO channel_audit_logs (channel_id, action, status, details, created_at)
+                    VALUES (:cid, :action, :status, :details, NOW())
                 """)
                 payload = {
                     "cid": channel_id,
-                    "ltype": "TIKTOK_PUBLISH",
-                    "msg": f"Published TikTok video: {res.caption[:60]} (Status: {res.status})",
-                    "meta": json.dumps({"platform": "tiktok", "status": res.status}),
+                    "action": "publish_tiktok",
+                    "status": "success" if res.success else "failed",
+                    "details": json.dumps({
+                        "platform": "tiktok",
+                        "status": res.status,
+                        "caption": res.caption[:100],
+                        "video_path": res.video_path,
+                    }),
                 }
                 await session.execute(query, payload)
                 await session.commit()
         except Exception as exc:  # noqa: BLE001
             logger.warning("Failed to record TikTok audit log in DB: %s", exc)
+

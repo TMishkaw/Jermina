@@ -90,6 +90,11 @@ async def root():
         "wiki": "/wiki"
     }
 
+
+@app.get("/health", tags=["General"])
+async def health():
+    return {"status": "healthy", "engine": "Jemini Core"}
+
 # ----------------- Key Rotator Endpoints -----------------
 @app.get("/rotator/status", tags=["API Key Rotator"])
 async def get_rotator_status():
@@ -154,6 +159,10 @@ async def onboard_channel(profile: ChannelProfile):
 
 @app.get("/channels", tags=["Channel Management"])
 async def list_channels():
+    from jemini.core.context import ChannelRegistry
+    if not channels:
+        for c in ChannelRegistry.list_channels():
+            channels[c.channel_id] = c
     return {"channels": list(channels.values())}
 
 @app.post("/publisher/publish/{platform}", tags=["Publisher"])
