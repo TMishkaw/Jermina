@@ -50,18 +50,19 @@ class LiveVideoReviewer:
         frames_pattern = temp_dir / "frame_%04d.jpg"
         audio_path = temp_dir / "audio_16k.pcm"
 
-        # 1. Extract frames at specified fps
+        # 1. Extract optimized frames (540p width, q:v 6) per Gemini Live API recommendations (~22KB/frame)
         cmd_frames = [
             self.ffmpeg_bin,
             "-y",
             "-i",
             str(video_path),
             "-vf",
-            f"fps={fps}",
+            f"fps={fps},scale=540:-1",
             "-q:v",
-            "2",
+            "6",
             str(frames_pattern),
         ]
+
         proc_frames = await asyncio.create_subprocess_exec(
             *cmd_frames,
             stdout=asyncio.subprocess.PIPE,
@@ -258,8 +259,10 @@ class LiveVideoReviewer:
             config = types.LiveConnectConfig(
                 response_modalities=[types.Modality.AUDIO],
                 output_audio_transcription=types.AudioTranscriptionConfig(),
+                media_resolution=types.MediaResolution.MEDIA_RESOLUTION_LOW,
                 system_instruction=types.Content(parts=[types.Part(text=system_inst)]),
             )
+
 
             collected_parts: list[str] = []
 
