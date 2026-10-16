@@ -85,12 +85,18 @@ class DevelopmentBrain:
             "   - Step 1 (RCA): Analyze why the architecture, contract, or typing permitted the error.\n"
             "   - Step 2 (Systemic Fix): Fix the architectural contract (Pydantic v2 model, interface, base class).\n"
             "   - Step 3 (Defect Fix): Resolve the localized bug only after closing the systemic gap.\n"
-            "   - Step 4 (Regression Lock): Write a dedicated isolated pytest test reproducing the exact failure before merging to dev."
+            "   - Step 4 (Regression Lock): Write a dedicated isolated pytest test reproducing the exact failure before merging to dev.\n\n"
+            "9. 5-STEP ARCHITECTURE AUDIT & VERIFICATION CHECKLIST:\n"
+            "   - Step 1 (Determinism & Typing): Pydantic v2 contracts, zero Any, strict ruff/mypy checks, isolated core.\n"
+            "   - Step 2 (Database Audit): Declarative schema parity, asyncio.Lock / concurrency protection, in-memory cooldown caching.\n"
+            "   - Step 3 (Specialized Engines): Key rotator hot standby, per-model 429 isolation, seamless Live API session wrappers.\n"
+            "   - Step 4 (RCA Compliance): 100% adherence to Root-Cause First without local quick-fix workarounds.\n"
+            "   - Step 5 (Docs & Memory Parity): Complete documentation and pgvector associative memory synchronization."
         )
         return ContextLayer(
             layer_type=ContextLayerType.DOMAIN,
             name="development_brain",
-            version="2.1.0",
+            version="2.2.0",
             content=content,
             metadata={"domain": "engineering_and_gemini_architecture"}
         )

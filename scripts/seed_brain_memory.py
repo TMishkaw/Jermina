@@ -229,6 +229,22 @@ def load_knowledge_chunks() -> list[dict[str, Any]]:
         )
     })
 
+    # 12. 5-Step Architecture Audit Checklist
+    chunks.append({
+        "title": "5-Step Architecture Audit & Verification Checklist",
+        "category": "context",
+        "tags": ["audit", "checklist", "verification", "code-quality", "review"],
+        "source": "docs/guidelines/architecture_audit_checklist.md",
+        "content": (
+            "5-Step Architecture Audit & Verification Checklist for Jemini:\n"
+            "Step 1 (Determinism & Typing): Pydantic v2 static typing, zero Any, strict ruff/mypy checks, clean core isolation from channel projects.\n"
+            "Step 2 (Database Audit): Declarative schema parity, asyncio.Lock / concurrency protection against race conditions, in-memory cooldown caching.\n"
+            "Step 3 (Specialized Modules): Key Rotator hot-standby, per-model 429 isolation, seamless Live API session wrappers without broken streams.\n"
+            "Step 4 (RCA Protocol): 100% adherence to Root-Cause First without local quick-fix workarounds.\n"
+            "Step 5 (Docs & Memory Parity): Up-to-date documentation and pgvector associative vector memory synchronization."
+        )
+    })
+
     return chunks
 
 async def seed_memory():
