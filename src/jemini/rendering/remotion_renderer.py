@@ -144,10 +144,11 @@ class RemotionRenderer:
             out_file.name,
         )
 
-        # Execute Remotion render using shell
+        # Execute Remotion render using shell with bundle cache and fast encoding
         cmd_str = (
             f'npx remotion render src/index.ts {opts.composition_id} '
-            f'"{out_file}" --props="{props_file}" --concurrency={opts.concurrency}'
+            f'"{out_file}" --props="{props_file}" --concurrency={opts.concurrency} '
+            f'--bundle-cache --x264-preset=veryfast'
         )
 
         proc = await asyncio.create_subprocess_shell(
