@@ -18,6 +18,18 @@ services:
       timeout: 5s
       retries: 5
 
+  remotion:
+    build:
+      context: ./remotion
+      dockerfile: Dockerfile
+    container_name: jemini_remotion
+    volumes:
+      - ./remotion:/app
+      - /app/node_modules
+      - ./output:/app/out
+    profiles:
+      - render
+
 volumes:
   postgres_data:
     driver: local

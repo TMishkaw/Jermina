@@ -1,0 +1,22 @@
+{
+  "name": "jemini-remotion",
+  "version": "1.0.0",
+  "description": "Jemini Programmatic Video & Motion Graphics Engine (9:16 Shorts & 16:9 Landscape)",
+  "scripts": {
+    "start": "remotion preview src/index.ts",
+    "render:short": "remotion render src/index.ts StickmanShort9x16 out/stickman_short.mp4",
+    "render:landscape": "remotion render src/index.ts DigestMain16x9 out/digest_landscape.mp4",
+    "build": "remotion bundle src/index.ts"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.260",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "remotion": "^4.0.260"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.7.0"
+  }
+}

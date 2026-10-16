@@ -57,3 +57,10 @@ keys.json
 
 # Antigravity artifacts
 .system_generated/
+
+# Node & Remotion
+node_modules/
+remotion/build/
+remotion/out/
+out/
+
