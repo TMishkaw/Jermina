@@ -1,27 +1,79 @@
 """Autonomous built-in Wiki Knowledge Base for Jemini."""
 
+from __future__ import annotations
+
+import logging
+from pathlib import Path
+from typing import Any
+
+logger = logging.getLogger(__name__)
+
+
 class WikiEngine:
-    """Renders interactive documentation and architectural blueprints."""
+    """Manages autonomous Wiki articles in docs/wiki/ and renders interactive portal."""
+
+    def __init__(self, wiki_root: Path | str | None = None):
+        base = (
+            Path(wiki_root)
+            if wiki_root
+            else Path(__file__).resolve().parent.parent.parent.parent / "docs" / "wiki"
+        )
+        self.wiki_root = base
+
+    def list_articles(self) -> list[dict[str, Any]]:
+        """Lists metadata for all markdown articles in docs/wiki/."""
+        if not self.wiki_root.exists():
+            return []
+        articles = []
+        for f in sorted(self.wiki_root.glob("*.md")):
+            content = f.read_text(encoding="utf-8")
+            first_line = content.splitlines()[0] if content.splitlines() else f.stem
+            title = first_line.lstrip("#").strip() if first_line.startswith("#") else f.stem
+            articles.append({
+                "article_name": f.stem,
+                "title": title,
+                "file_path": str(f),
+                "size_bytes": f.stat().st_size,
+                "word_count": len(content.split()),
+            })
+        return articles
+
+    def get_article(self, name: str) -> str | None:
+        """Retrieves raw markdown text of a wiki article."""
+        clean_name = name.removesuffix(".md").strip().lower()
+        for f in self.wiki_root.glob("*.md"):
+            if f.stem.lower() == clean_name:
+                return f.read_text(encoding="utf-8")
+        return None
 
     def render_html(self) -> str:
-        return """<!DOCTYPE html>
+        """Renders interactive HTML portal listing all dynamic articles."""
+        articles = self.list_articles()
+        article_items = "\n".join(
+            f'<li><a href="/wiki/articles/{a["article_name"]}"><strong>{a["title"]}</strong></a> '
+            f'<span style="color:#64748b; font-size:0.85rem;">({a["article_name"]}.md &bull; {a["word_count"]} words)</span></li>'
+            for a in articles
+        )
+
+        return f"""<!DOCTYPE html>
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
     <title>Jemini Autonomous Wiki & Knowledge Base</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0b1120; color: #f8fafc; margin: 0; padding: 2rem; }
-        .container { max-width: 960px; margin: 0 auto; background: #1e293b; padding: 2.5rem; border-radius: 14px; border: 1px solid #334155; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-        h1 { color: #38bdf8; border-bottom: 2px solid #334155; padding-bottom: 0.5rem; }
-        h2 { color: #818cf8; margin-top: 1.8rem; }
-        h3 { color: #34d399; }
-        .badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.8rem; background: #0284c7; color: white; margin-right: 0.5rem; font-weight: 600; }
-        .badge-green { background: #059669; }
-        .badge-purple { background: #7c3aed; }
-        pre { background: #020617; padding: 1rem; border-radius: 8px; overflow-x: auto; color: #a5f3fc; border: 1px solid #1e293b; }
-        ul { line-height: 1.8; }
-        a { color: #38bdf8; text-decoration: none; font-weight: 500; }
-        a:hover { text-decoration: underline; }
+        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0b1120; color: #f8fafc; margin: 0; padding: 2rem; }}
+        .container {{ max-width: 960px; margin: 0 auto; background: #1e293b; padding: 2.5rem; border-radius: 14px; border: 1px solid #334155; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }}
+        h1 {{ color: #38bdf8; border-bottom: 2px solid #334155; padding-bottom: 0.5rem; }}
+        h2 {{ color: #818cf8; margin-top: 1.8rem; }}
+        h3 {{ color: #34d399; }}
+        .badge {{ display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.8rem; background: #0284c7; color: white; margin-right: 0.5rem; font-weight: 600; }}
+        .badge-green {{ background: #059669; }}
+        .badge-purple {{ background: #7c3aed; }}
+        pre {{ background: #020617; padding: 1rem; border-radius: 8px; overflow-x: auto; color: #a5f3fc; border: 1px solid #1e293b; }}
+        ul {{ line-height: 1.8; }}
+        a {{ color: #38bdf8; text-decoration: none; font-weight: 500; }}
+        a:hover {{ text-decoration: underline; }}
+        .articles-box {{ background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 1.5rem; margin-top: 1rem; }}
     </style>
 </head>
 <body>
@@ -34,6 +86,13 @@ class WikiEngine:
             <span class="badge">PostgreSQL + pgvector</span>
         </p>
         
+        <h2>📚 Каталог статей бази знань Wiki ({len(articles)} статей)</h2>
+        <div class="articles-box">
+            <ul>
+                {article_items}
+            </ul>
+        </div>
+
         <h2>1. Підсистема 1: Key Rotator & Quota Manager</h2>
         <ul>
             <li><strong>Пріоритет Free-Tier:</strong> Система завжди спочатку вичерпує безкоштовні квоти. Платні ключі (Paid) підключаються лише як резерв або для критичних важких завдань.</li>
@@ -59,30 +118,17 @@ class WikiEngine:
         <h2>4. Model Context Protocol (MCP) Інтеграція</h2>
         <ul>
             <li><strong>Воркспейс-конфіг:</strong> <code>.agents/mcp_config.json</code> для нативних AI-інструментів.</li>
+            <li><strong>jemini-studio-docs:</strong> Швидкий пошук у базі знань, перегляд статей Wiki та виконання викликів REST API.</li>
             <li><strong>postgres-jemini:</strong> Пряма інспекція бази даних PostgreSQL та таблиць пам'яті агентів без ручного введення запитів.</li>
             <li><strong>github:</strong> Автономне відкриття GitHub Issues для багів та генерація Pull Requests.</li>
         </ul>
 
-        <h2>5. Можливості платформи Antigravity</h2>
-        <ul>
-            <li><strong>Scheduled Tasks:</strong> Періодичне виконання фонових завдань за розкладом на базі Gemini 3.8 Flash.</li>
-            <li><strong>JSON Hooks:</strong> Перехоплення життєвого циклу агента (pre-tool, post-response, loop stop) через локальні shell-скрипти.</li>
-            <li><strong>Voice Transcription:</strong> Живе введення та очищення голосових промтів через <code>Ctrl + M</code>.</li>
-            <li><strong>Remote Control & VCS:</strong> Мобільний контроль агентів через браузер та Git-нативна панель дифу/комітів.</li>
-        </ul>
-
-        <h2>6. Кастомні субагенти (.agents/agents)</h2>
-        <ul>
-            <li><strong>Ізоляція Worktree:</strong> Режим <code>branch</code> дозволяє субагентам працювати у фонових Git worktrees.</li>
-            <li><strong>Формат .md з YAML:</strong> Декларативне визначення інструментів, моделі та політики виконання.</li>
-            <li><strong>video-evaluator:</strong> Вбудований субагент аудиту контенту та дотримання Golden Acting Standard.</li>
-        </ul>
-
-        <h2>7. Інтерактивні посилання</h2>
+        <h2>5. Інтерактивні посилання</h2>
         <ul>
             <li><a href="/docs">Інтерактивна OpenAPI документація (Swagger UI)</a></li>
             <li><a href="/redoc">ReDoc документація</a></li>
             <li><a href="/rotator/status">Поточний стан ротатора ключів</a></li>
+            <li><a href="/wiki/articles">JSON Каталог усіх статей Wiki</a></li>
         </ul>
     </div>
 </body>

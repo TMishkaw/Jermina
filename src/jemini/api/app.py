@@ -182,6 +182,22 @@ async def get_wiki_html():
     return wiki.render_html()
 
 
+@app.get("/wiki/articles", tags=["Wiki"])
+async def list_wiki_articles():
+    """Lists all markdown articles in docs/wiki/."""
+    articles = wiki.list_articles()
+    return {"total": len(articles), "articles": articles}
+
+
+@app.get("/wiki/articles/{article_name}", tags=["Wiki"])
+async def get_wiki_article(article_name: str):
+    """Retrieves markdown text and metadata of a specific wiki article."""
+    content = wiki.get_article(article_name)
+    if content is None:
+        raise HTTPException(status_code=404, detail=f"Wiki article '{article_name}' not found.")
+    return {"article_name": article_name, "content": content}
+
+
 # ----------------- Production Queue Endpoints -----------------
 class EnqueueTaskRequest(BaseModel):
     channel_id: str

@@ -25,6 +25,26 @@ def test_api_wiki():
     assert "Jemini Autonomous Wiki" in wiki_res.text
     assert "Key Rotator & Quota Manager" in wiki_res.text
 
+    # Test /wiki/articles
+    articles_res = client.get("/wiki/articles")
+    assert articles_res.status_code == 200
+    data = articles_res.json()
+    assert data["total"] >= 10
+    names = [a["article_name"] for a in data["articles"]]
+    assert "architecture" in names
+    assert "git_flow" in names
+
+    # Test /wiki/articles/{article_name}
+    single_res = client.get("/wiki/articles/architecture")
+    assert single_res.status_code == 200
+    single_data = single_res.json()
+    assert single_data["article_name"] == "architecture"
+    assert "Архітектурна специфікація" in single_data["content"]
+
+    # 404 for unknown article
+    missing_res = client.get("/wiki/articles/unknown_article_xyz")
+    assert missing_res.status_code == 404
+
 
 def test_api_rotator_endpoints():
     status_res = client.get("/rotator/status")

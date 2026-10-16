@@ -58,6 +58,8 @@ def test_mcp_tools_list(mcp_server):
     assert "jemini_list_api_endpoints" in tool_names
     assert "jemini_api_schema" in tool_names
     assert "jemini_api_call" in tool_names
+    assert "jemini_list_wiki_articles" in tool_names
+    assert "jemini_get_wiki_article" in tool_names
 
 
 def test_mcp_call_search_docs(mcp_server):
@@ -194,6 +196,54 @@ def test_mcp_call_api_tools(mcp_server):
     text_call = resp_call["result"]["content"][0]["text"]
     assert "HTTP 200" in text_call
     assert "healthy" in text_call
+
+
+def test_mcp_call_wiki_tools(mcp_server):
+    # 1. jemini_list_wiki_articles
+    req_list = {
+        "jsonrpc": "2.0",
+        "id": 20,
+        "method": "tools/call",
+        "params": {
+            "name": "jemini_list_wiki_articles",
+            "arguments": {},
+        },
+    }
+    resp_list = mcp_server.handle_request(req_list)
+    assert resp_list["id"] == 20
+    text_list = resp_list["result"]["content"][0]["text"]
+    assert "architecture" in text_list
+    assert "git_flow" in text_list
+    assert "mcp" in text_list
+    assert "subagents" in text_list
+
+    # 2. jemini_get_wiki_article
+    req_get = {
+        "jsonrpc": "2.0",
+        "id": 21,
+        "method": "tools/call",
+        "params": {
+            "name": "jemini_get_wiki_article",
+            "arguments": {"article_name": "git_flow"},
+        },
+    }
+    resp_get = mcp_server.handle_request(req_get)
+    assert resp_get["id"] == 21
+    text_get = resp_get["result"]["content"][0]["text"]
+    assert "Git Flow, Architecture Isolation & Zero-Leak Release Protocol" in text_get
+
+    # 3. Non-existent wiki article
+    req_missing = {
+        "jsonrpc": "2.0",
+        "id": 22,
+        "method": "tools/call",
+        "params": {
+            "name": "jemini_get_wiki_article",
+            "arguments": {"article_name": "non_existent_wiki_xyz"},
+        },
+    }
+    resp_missing = mcp_server.handle_request(req_missing)
+    assert "not found" in resp_missing["result"]["content"][0]["text"]
 
 
 def test_mcp_unknown_method(mcp_server):

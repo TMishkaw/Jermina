@@ -127,6 +127,28 @@ TOOLS = [
             "required": ["endpoint"],
         },
     },
+    {
+        "name": "jemini_list_wiki_articles",
+        "description": "Lists all architectural and system knowledge wiki articles in docs/wiki/ with titles, filenames, and word counts.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+        },
+    },
+    {
+        "name": "jemini_get_wiki_article",
+        "description": "Retrieves the full markdown content of a specific wiki article (e.g. 'architecture', 'git_flow', 'subagents', 'gemini_models_catalog', 'concurrency_and_limits').",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "article_name": {
+                    "type": "string",
+                    "description": "Article name or stem (e.g. 'architecture', 'git_flow', 'subagents', 'mcp')",
+                },
+            },
+            "required": ["article_name"],
+        },
+    },
 ]
 
 
@@ -301,6 +323,30 @@ class MCPServer:
                 body_formatted = resp.text
 
             return f"### HTTP {resp.status_code} ({method} {endpoint})\n```json\n{body_formatted}\n```"
+
+        if name == "jemini_list_wiki_articles":
+            from jemini.wiki.wiki_engine import WikiEngine
+
+            wiki = WikiEngine()
+            articles = wiki.list_articles()
+            lines = [
+                f"# Jemini Knowledge Wiki Catalog ({len(articles)} articles):\n",
+                "| Article | Title | Words | Size |",
+                "| :--- | :--- | :---: | :---: |",
+            ]
+            for a in articles:
+                lines.append(f"| `{a['article_name']}` | {a['title']} | {a['word_count']} | {a['size_bytes']} B |")
+            return "\n".join(lines)
+
+        if name == "jemini_get_wiki_article":
+            from jemini.wiki.wiki_engine import WikiEngine
+
+            article_name = args.get("article_name", "")
+            wiki = WikiEngine()
+            content = wiki.get_article(article_name)
+            if content is None:
+                return f"Error: Wiki article '{article_name}' not found in docs/wiki/."
+            return content
 
         return f"Error: Unknown tool '{name}'."
 
