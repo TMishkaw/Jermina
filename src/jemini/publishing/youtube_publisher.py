@@ -44,14 +44,18 @@ class YouTubeShortMetadata(BaseModel):
 class PublishedVideoResult(BaseModel):
     """Response returned upon successful upload."""
     video_id: str
-    shorts_url: str
+    shorts_url: str = ""
+    watch_url: str = ""
     title: str
     privacy_status: str
     uploaded_at: str
 
     @property
     def published_url(self) -> str:
-        return self.shorts_url
+        return self.shorts_url or self.watch_url
+
+
+YouTubeVideoMetadata = YouTubeShortMetadata
 
 
 class YouTubePublisher:
@@ -152,26 +156,29 @@ class YouTubePublisher:
         except Exception as exc:  # noqa: BLE001
             logger.warning("Failed to record upload audit log: %s", exc)
 
-    async def publish_short(
+    async def publish_video(
         self,
         video_path: Path | str,
         metadata: YouTubeShortMetadata,
+        is_short: bool = False,
         channel_id: str = "stickman_lab",
         mock_mode: bool = False,
     ) -> PublishedVideoResult:
-        """Uploads a video to YouTube as a Short with resumable upload."""
+        """Uploads a video to YouTube (Short or widescreen 16:9) with resumable upload."""
         vid_file = Path(video_path).resolve()
         if not vid_file.exists():
             msg = f"Video file not found: {vid_file}"
             raise FileNotFoundError(msg)
 
-        formatted_title = self._format_shorts_title(metadata.title)
+        formatted_title = self._format_shorts_title(metadata.title) if is_short else metadata.title[:100]
 
         if mock_mode:
-            logger.info("Executing mock YouTube publication for '%s'...", formatted_title)
+            logger.info("Executing mock YouTube publication for '%s' (is_short=%s)...", formatted_title, is_short)
+            video_id = "mock_shorts_yt123" if is_short else "mock_video_yt16x9"
             res = PublishedVideoResult(
-                video_id="mock_shorts_yt123",
-                shorts_url="https://youtube.com/shorts/mock_shorts_yt123",
+                video_id=video_id,
+                shorts_url=f"https://youtube.com/shorts/{video_id}" if is_short else "",
+                watch_url=f"https://youtube.com/watch?v={video_id}",
                 title=formatted_title,
                 privacy_status=metadata.privacy_status.value,
                 uploaded_at=datetime.datetime.now(datetime.timezone.utc).isoformat(),
@@ -222,7 +229,8 @@ class YouTubePublisher:
 
             return PublishedVideoResult(
                 video_id=video_id,
-                shorts_url=f"https://youtube.com/shorts/{video_id}",
+                shorts_url=f"https://youtube.com/shorts/{video_id}" if is_short else "",
+                watch_url=f"https://youtube.com/watch?v={video_id}",
                 title=formatted_title,
                 privacy_status=metadata.privacy_status.value,
                 uploaded_at=datetime.datetime.now(datetime.timezone.utc).isoformat(),
@@ -231,3 +239,20 @@ class YouTubePublisher:
         result = await asyncio.to_thread(_upload_worker)
         await self._log_upload_to_db(channel_id, result)
         return result
+
+    async def publish_short(
+        self,
+        video_path: Path | str,
+        metadata: YouTubeShortMetadata,
+        channel_id: str = "stickman_lab",
+        mock_mode: bool = False,
+    ) -> PublishedVideoResult:
+        """Backwards-compatible convenience wrapper for YouTube Shorts publication."""
+        return await self.publish_video(
+            video_path=video_path,
+            metadata=metadata,
+            is_short=True,
+            channel_id=channel_id,
+            mock_mode=mock_mode,
+        )
+

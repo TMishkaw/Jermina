@@ -54,6 +54,7 @@ async def run_e2e_render(
     publish_tiktok: bool = False,
     operator_review: bool = False,
     channel_id: str = "stickman_lab",
+    aspect_ratio: str = "9:16",
     max_correction_attempts: int = 2,
 ) -> dict[str, Any]:
     """Executes the full autonomous pipeline with self-correction."""
@@ -116,11 +117,12 @@ async def run_e2e_render(
     video_output_path = out_dir / f"{sanitize_filename(short_script.title)}.mp4"
 
     render_opts = RenderOptions(
+        aspect_ratio=aspect_ratio,
         concurrency=4,
         dry_run=mock_mode,
     )
-    logger.info("Compiling and rendering Remotion video...")
-    final_video = await renderer.render_short(
+    logger.info("Compiling and rendering Remotion video (%s)...", aspect_ratio)
+    final_video = await renderer.render_video(
         title=short_script.title,
         hook_text=short_script.hook_text,
         audio_path=pipeline_res.master_audio_path,
@@ -128,6 +130,7 @@ async def run_e2e_render(
         subtitles=pipeline_res.unified_cues,
         output_mp4=video_output_path,
         accent_color=profile.accent_color,
+        aspect_ratio=aspect_ratio,
         options=render_opts,
     )
     logger.info("✓ Video rendering complete: %s", final_video)
@@ -146,7 +149,7 @@ async def run_e2e_render(
             target_type=ValidationTargetType.VIDEO,
             expected_duration_seconds=pipeline_res.total_duration_seconds,
             target_emotion=profile.tone_of_voice,
-            key_points=["3-second hook", "clear subtitles", "stickman acting"],
+            key_points=["3-second hook", "clear subtitles", "visual acting"],
         )
 
         while attempt < max_correction_attempts and current_status == ValidationStatus.NEEDS_CORRECTION:
@@ -154,7 +157,7 @@ async def run_e2e_render(
             logger.info("Running Multimodal Quality Validation (Attempt %d/%d)...", attempt, max_correction_attempts)
             validation_card = await validator.validate(
                 intent=intent,
-                payload_summary=f"Stickman Short 9:16 on '{short_script.title}' for channel '{profile.channel_name}'",
+                payload_summary=f"Video ({aspect_ratio}) on '{short_script.title}' for channel '{profile.channel_name}'",
                 media_path=final_video,
                 iteration=attempt,
                 channel_id=profile.channel_id,
@@ -192,18 +195,22 @@ async def run_e2e_render(
                 "Please place OAuth2 client credentials at 'config/client_secret.json' to enable live uploads."
             )
         else:
-            logger.info("Publishing video to YouTube Shorts...")
-            published_res = await publisher.publish_short(
+            is_short = aspect_ratio in ["9:16", "vertical"]
+            target_label = "YouTube Shorts" if is_short else "YouTube (16:9 Widescreen)"
+            logger.info("Publishing video to %s...", target_label)
+            published_res = await publisher.publish_video(
                 video_path=final_video,
                 metadata=YouTubeShortMetadata(
                     title=short_script.title,
                     description=f"{short_script.hook_text}\n\nСтворено повністю автономно через рушій Jemini.",
                     privacy_status=PublishingPrivacyStatus.UNLISTED,
                 ),
+                is_short=is_short,
                 channel_id=profile.channel_id,
                 mock_mode=mock_mode,
             )
-            logger.info("✓ YouTube Short Published: %s", published_res.shorts_url)
+            logger.info("✓ %s Published: %s", target_label, published_res.published_url)
+
 
     # 5.5 TikTok Auto-Publishing (Optional)
     published_tiktok_res = None
@@ -253,6 +260,7 @@ async def run_e2e_render(
         "validation_score": validation_card.overall_score if validation_card else None,
         "validation_status": validation_card.status.value if validation_card else "SKIPPED",
         "youtube_shorts_url": published_res.shorts_url if published_res else None,
+        "youtube_url": published_res.published_url if published_res else None,
         "tiktok_status": published_tiktok_res.status if published_tiktok_res else None,
         "operator_submission_id": operator_sub_id,
     }
@@ -263,7 +271,7 @@ async def run_e2e_render(
     logger.info("   PRODUCTION PIPELINE COMPLETED SUCCESSFULLY!    ")
     logger.info("   Video artifact: %s", final_video)
     if published_res:
-        logger.info("   YouTube URL:    %s", published_res.shorts_url)
+        logger.info("   YouTube URL:    %s", published_res.published_url)
     if operator_sub_id:
         logger.info("   Operator Sub:   %s (Pending Approval)", operator_sub_id)
     logger.info("==================================================")
@@ -543,7 +551,9 @@ def main():
     render_parser.add_argument("--output-dir", type=str, default="output", help="Destination folder for artifacts")
     render_parser.add_argument("--mock-mode", action="store_true", help="Execute in offline mock mode")
     render_parser.add_argument("--skip-validation", action="store_true", help="Skip multimodal validation loop")
-    render_parser.add_argument("--publish-youtube", action="store_true", help="Upload rendered video to YouTube Shorts")
+    render_parser.add_argument("--aspect-ratio", type=str, default="9:16", choices=["9:16", "16:9"], help="Aspect ratio (9:16 vertical or 16:9 widescreen)")
+    render_parser.add_argument("--widescreen", action="store_true", help="Shortcut for 16:9 widescreen YouTube video")
+    render_parser.add_argument("--publish-youtube", action="store_true", help="Upload rendered video to YouTube (Shorts or Widescreen)")
     render_parser.add_argument("--publish-tiktok", action="store_true", help="Upload rendered video to TikTok")
     render_parser.add_argument("--operator-review", action="store_true", help="Submit to operator review plane instead of publishing immediately")
 
@@ -586,6 +596,7 @@ def main():
     args = parser.parse_args()
 
     if args.command == "render":
+        target_aspect = "16:9" if args.widescreen else args.aspect_ratio
         asyncio.run(
             run_e2e_render(
                 topic=args.topic,
@@ -597,6 +608,7 @@ def main():
                 publish_youtube=args.publish_youtube,
                 publish_tiktok=args.publish_tiktok,
                 operator_review=args.operator_review,
+                aspect_ratio=target_aspect,
             )
         )
     elif args.command == "channels":

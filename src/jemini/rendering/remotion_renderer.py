@@ -21,9 +21,19 @@ logger = logging.getLogger(__name__)
 
 class RenderOptions(BaseModel):
     composition_id: str = "StickmanShort9x16"
+    aspect_ratio: str = "9:16"  # "9:16" for vertical Shorts, "16:9" for horizontal widescreen
     concurrency: int = Field(default=PipelineLimits.REMOTION.default_concurrency_workers)
     timeout_seconds: int = 360
     dry_run: bool = False
+
+    @property
+    def width(self) -> int:
+        return 1920 if self.aspect_ratio in ["16:9", "widescreen", "horizontal"] else 1080
+
+    @property
+    def height(self) -> int:
+        return 1080 if self.aspect_ratio in ["16:9", "widescreen", "horizontal"] else 1920
+
 
 
 class RemotionRenderer:
@@ -83,7 +93,7 @@ class RemotionRenderer:
             },
         ]
 
-    async def render_short(
+    async def render_video(
         self,
         title: str,
         hook_text: str,
@@ -92,10 +102,18 @@ class RemotionRenderer:
         subtitles: list[dict[str, Any]],
         output_mp4: Path | str,
         accent_color: str = "#00F0FF",
+        aspect_ratio: str = "9:16",
         options: RenderOptions | None = None,
     ) -> Path:
-        """Renders 9:16 short video with synced audio, subtitles, and stickman rig."""
+        """Renders video (9:16 Shorts or 16:9 Widescreen) with synced audio, subtitles, and stickman rig."""
         opts = options or RenderOptions()
+        if aspect_ratio in ("16:9", "widescreen", "horizontal") or opts.aspect_ratio in ("16:9", "widescreen", "horizontal"):
+            opts.composition_id = "CyberStudio16x9"
+            opts.aspect_ratio = "16:9"
+        else:
+            opts.composition_id = "StickmanShort9x16"
+            opts.aspect_ratio = "9:16"
+
         out_file = Path(output_mp4).resolve()
         out_file.parent.mkdir(parents=True, exist_ok=True)
 
@@ -165,3 +183,7 @@ class RemotionRenderer:
 
         logger.info("Successfully rendered video: %s (%.2f MB)", out_file.name, out_file.stat().st_size / (1024 * 1024))
         return out_file
+
+    # Alias for backward compatibility
+    render_short = render_video
+

@@ -57,6 +57,33 @@ async def test_youtube_publish_short_mock(tmp_path: Path):
 async def test_youtube_publish_missing_file():
     publisher = YouTubePublisher()
     metadata = YouTubeShortMetadata(title="Sample")
-    
+
     with pytest.raises(FileNotFoundError, match="Video file not found"):
         await publisher.publish_short(video_path="non_existent.mp4", metadata=metadata)
+
+
+@pytest.mark.asyncio
+async def test_youtube_publish_widescreen_mock(tmp_path: Path):
+    publisher = YouTubePublisher()
+    test_video = tmp_path / "sample_widescreen.mp4"
+    test_video.write_bytes(b"MOCK_MP4_WIDESCREEN")
+
+    metadata = YouTubeShortMetadata(
+        title="Повний 16:9 ролик про ШІ архітектуру",
+        description="Повний огляд Jemini двигуна",
+        privacy_status=PublishingPrivacyStatus.UNLISTED,
+    )
+
+    res = await publisher.publish_video(
+        video_path=test_video,
+        metadata=metadata,
+        is_short=False,
+        channel_id="cyber_matrix",
+        mock_mode=True,
+    )
+
+    assert res.video_id == "mock_video_yt16x9"
+    assert "https://youtube.com/watch?v=" in res.watch_url
+    assert "#Shorts" not in res.title
+    assert res.published_url == res.watch_url
+
