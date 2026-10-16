@@ -8,6 +8,7 @@ import { KineticHook } from "../components/KineticHook";
 import { TerminalWindow } from "../components/TerminalWindow";
 import { BreakingTicker } from "../components/BreakingTicker";
 import { Forma2BBlueprint } from "../components/Forma2BBlueprint";
+import { FloatingEmoji } from "../components/FloatingEmoji";
 import { AnimationType, EyeExpression, MouthExpression } from "../components/kinematic_presets";
 
 export interface StickmanCue {
@@ -17,6 +18,7 @@ export interface StickmanCue {
   eyeType: EyeExpression;
   mouthType: MouthExpression;
   prop?: "microphone" | "sword" | "coffee" | "laptop" | "none";
+  emoji?: string;
 }
 
 export interface SubtitleCue {
@@ -170,32 +172,34 @@ export const StickmanShort9x16: React.FC<{ config?: StickmanShortConfig }> = ({
         </span>
       </div>
 
-      {/* 6. Audio Reactor Orb (Top Center) */}
-      <div
-        style={{
-          position: "absolute",
-          top: 130,
-          left: "50%",
-          transform: "translateX(-50%)",
-          zIndex: 5,
-        }}
-      >
-        <AudioReactorOrb
-          color={config.accentColor}
-          size={220}
-          label="GEMINI 3.8 LIVE"
-          statusText="24kHz ACTING STREAM"
-          audioEnergy={currentEnergy}
-          isSpeaking={currentEnergy > 0.1}
-        />
-      </div>
+      {/* 6. Audio Reactor Orb (Top Center - Visible in Opening & Outro) */}
+      {(frame < 70 || frame >= (config.totalFrames ? config.totalFrames - 45 : 340)) && (
+        <div
+          style={{
+            position: "absolute",
+            top: 130,
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 5,
+          }}
+        >
+          <AudioReactorOrb
+            color={config.accentColor}
+            size={220}
+            label="GEMINI 3.8 LIVE"
+            statusText="24kHz ACTING STREAM"
+            audioEnergy={currentEnergy}
+            isSpeaking={currentEnergy > 0.1}
+          />
+        </div>
+      )}
 
       {/* 7. Opening Kinetic Hook (Frames 0-65) */}
       {frame < 68 && (
         <div
           style={{
             position: "absolute",
-            top: 400,
+            top: 360,
             left: 0,
             right: 0,
             opacity: hookOpacity,
@@ -211,17 +215,17 @@ export const StickmanShort9x16: React.FC<{ config?: StickmanShortConfig }> = ({
         </div>
       )}
 
-      {/* 8. Cyber Terminal Window (Frames 70-220) */}
+      {/* 8. Cyber Terminal Window (Frames 70-220, placed high at top: 220, zIndex: 12) */}
       {frame >= 70 && frame < 225 && (
         <div
           style={{
             position: "absolute",
-            top: 420,
-            left: 80,
-            right: 80,
-            transform: `scale(${Math.min(1, terminalEntrance)}) translateY(${(1 - Math.min(1, terminalEntrance)) * 50}px)`,
+            top: 220,
+            left: 70,
+            right: 70,
+            transform: `scale(${Math.min(0.88, terminalEntrance * 0.88)}) translateY(${(1 - Math.min(1, terminalEntrance)) * 30}px)`,
             opacity: Math.min(1, terminalEntrance),
-            zIndex: 15,
+            zIndex: 12,
           }}
         >
           <TerminalWindow
@@ -238,22 +242,23 @@ export const StickmanShort9x16: React.FC<{ config?: StickmanShortConfig }> = ({
         </div>
       )}
 
-      {/* 8.5 Forma 2-B HUD Vector Blueprint (Frames 225+) */}
+      {/* 8.5 Forma 2-B HUD Vector Blueprint (Frames 225+, placed high at top: 220, zIndex: 12) */}
       {frame >= 225 && frame < (config.totalFrames ? config.totalFrames - 45 : 340) && (
         <div
           style={{
             position: "absolute",
-            top: 400,
+            top: 220,
             left: 70,
             right: 70,
-            zIndex: 15,
+            transform: "scale(0.88)",
+            zIndex: 12,
           }}
         >
           <Forma2BBlueprint accentColor={config.accentColor} />
         </div>
       )}
 
-      {/* 9. Dynamic 2.5D Stickman Character */}
+      {/* 9. Dynamic 2.5D Stickman Character (Presenter Foreground Layer: zIndex 25) */}
       <svg
         style={{
           position: "absolute",
@@ -261,14 +266,14 @@ export const StickmanShort9x16: React.FC<{ config?: StickmanShortConfig }> = ({
           width: "100%",
           height: "100%",
           pointerEvents: "none",
-          zIndex: 10,
+          zIndex: 25,
         }}
         viewBox="0 0 1080 1920"
       >
         <StickmanRig
           x={540}
-          y={1180}
-          scale={2.1}
+          y={1240}
+          scale={1.9}
           animation={activeCue.animation}
           eyeType={activeCue.eyeType}
           mouthType={activeCue.mouthType}
@@ -278,6 +283,19 @@ export const StickmanShort9x16: React.FC<{ config?: StickmanShortConfig }> = ({
           strokeWidth={7}
         />
       </svg>
+
+      {/* 9.5 Floating Semantic Emoji (Reactive to spoken topic) */}
+      {activeCue.emoji && (
+        <FloatingEmoji
+          emoji={activeCue.emoji}
+          fromFrame={activeCue.fromFrame}
+          durationInFrames={activeCue.durationInFrames}
+          x={680}
+          y={920}
+          size={100}
+          accentColor={config.accentColor}
+        />
+      )}
 
       {/* 10. Kinetic Karaoke Subtitles */}
       <div

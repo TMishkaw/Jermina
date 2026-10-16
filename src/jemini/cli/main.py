@@ -435,6 +435,7 @@ async def handle_scout(channel_id: str, count: int, enqueue: bool, mock_mode: bo
 async def handle_queue(
     list_tasks: bool,
     process_next: bool,
+    channel_id: str | None = None,
     publish_youtube: bool = False,
     public: bool = False,
     mock_mode: bool = False,
@@ -445,9 +446,9 @@ async def handle_queue(
     queue = ProductionQueue()
 
     if process_next:
-        pending = queue.get_next_pending()
+        pending = queue.get_next_pending(channel_id=channel_id)
         if not pending:
-            logger.info("No pending tasks in queue.")
+            logger.info("No pending tasks in queue (channel filter: %s).", channel_id)
             return
         logger.info("Processing queued task %s: '%s' for channel '%s'...", pending.task_id, pending.topic, pending.channel_id)
         try:
@@ -625,18 +626,20 @@ async def handle_review_live(
     print("-" * 80)
     print(f"  [1] 3-SECOND HOOK:\n      {result.hook_evaluation}")
     print(f"  [2] VOICE & ACTING (GOLDEN ACTING STANDARD):\n      {result.voice_acting_evaluation}")
+    if result.occlusion_evaluation:
+        print(f"  [3] COMPOSITION & OCCLUSION:\n      {result.occlusion_evaluation}")
     if result.animation_evaluation:
-        print(f"  [3] ANIMATION & STICKMAN KINEMATICS:\n      {result.animation_evaluation}")
+        print(f"  [4] SEMANTIC ANIMATION & EMOJIS:\n      {result.animation_evaluation}")
     if result.design_typography_evaluation:
-        print(f"  [4] DESIGN & MOBILE TYPOGRAPHY (1080x1920):\n      {result.design_typography_evaluation}")
+        print(f"  [5] DESIGN & MOBILE TYPOGRAPHY (1080x1920):\n      {result.design_typography_evaluation}")
     if result.style_benchmark_evaluation:
-        print(f"  [5] MODERN BENCHMARK COMPARISON (Fireship / Hormozi):\n      {result.style_benchmark_evaluation}")
-    print(f"  [6] INTENT ACCURACY:\n      {result.intent_discrepancies}")
-    print("  [7] ACTIONABLE IMPROVEMENTS:")
+        print(f"  [6] MODERN BENCHMARK COMPARISON (Fireship / Hormozi):\n      {result.style_benchmark_evaluation}")
+    print(f"  [7] INTENT ACCURACY:\n      {result.intent_discrepancies}")
+    print("  [8] ACTIONABLE IMPROVEMENTS:")
     for imp in result.actionable_improvements:
         print(f"      • {imp}")
     if result.self_evolution_rules:
-        print("  [8] AUTONOMOUS SELF-EVOLUTION RULES (PERSISTED TO MEMORY):")
+        print("  [9] AUTONOMOUS SELF-EVOLUTION RULES (PERSISTED TO MEMORY):")
         for rule in result.self_evolution_rules:
             print(f"      [+] {rule}")
     print("=" * 80 + "\n")
@@ -781,6 +784,7 @@ def main():
     queue_parser = subparsers.add_parser("queue", help="Manage production queue")
     queue_parser.add_argument("--list", action="store_true", help="List tasks in queue")
     queue_parser.add_argument("--process-next", action="store_true", help="Process and render next queued task")
+    queue_parser.add_argument("--channel", type=str, default=None, help="Target channel ID to filter queue")
     queue_parser.add_argument("--publish-youtube", action="store_true", help="Publish completed video to YouTube")
     queue_parser.add_argument("--public", action="store_true", help="Publish video publicly to YouTube (default is Unlisted)")
     queue_parser.add_argument("--mock-mode", action="store_true", help="Run queue processing in mock mode")
@@ -900,6 +904,7 @@ def main():
             handle_queue(
                 list_tasks=args.list,
                 process_next=args.process_next,
+                channel_id=args.channel,
                 publish_youtube=args.publish_youtube,
                 public=args.public,
                 mock_mode=args.mock_mode,

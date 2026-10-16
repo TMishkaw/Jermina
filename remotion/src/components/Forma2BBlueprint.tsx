@@ -28,9 +28,9 @@ export const Forma2BBlueprint: React.FC<Forma2BBlueprintProps> = ({
       style={{
         background: "rgba(11, 14, 20, 0.94)",
         border: `2px solid ${accentColor}66`,
-        borderRadius: 24,
-        padding: "26px 30px",
-        boxShadow: `0 24px 48px rgba(0,0,0,0.7), inset 0 0 25px ${accentColor}18`,
+        borderRadius: 20,
+        padding: "16px 22px",
+        boxShadow: `0 20px 40px rgba(0,0,0,0.7), inset 0 0 25px ${accentColor}18`,
         transform: `scale(${Math.min(1, scaleProgress)})`,
         fontFamily: "'Inter', sans-serif",
         color: "#FFFFFF",
@@ -56,8 +56,8 @@ export const Forma2BBlueprint: React.FC<Forma2BBlueprintProps> = ({
           justifyContent: "space-between",
           alignItems: "center",
           borderBottom: `2px solid ${accentColor}33`,
-          paddingBottom: 16,
-          marginBottom: 20,
+          paddingBottom: 12,
+          marginBottom: 14,
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
@@ -80,33 +80,33 @@ export const Forma2BBlueprint: React.FC<Forma2BBlueprintProps> = ({
       </div>
 
       {/* Blueprint Architecture Nodes */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 16, position: "relative" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, position: "relative" }}>
         {/* Node 1: AI Brain & Context */}
         <div
           style={{
             background: "rgba(16, 25, 42, 0.92)",
             border: `1.5px solid ${accentColor}66`,
-            borderRadius: 14,
-            padding: "16px 20px",
+            borderRadius: 12,
+            padding: "12px 18px",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
           }}
         >
           <div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: "#F8FAFC", marginBottom: 4 }}>
+            <div style={{ fontSize: 24, fontWeight: 800, color: "#F8FAFC", marginBottom: 2 }}>
               🧠 Ядро Мозку (who_id = 17)
             </div>
-            <div style={{ fontSize: 20, color: "#94A3B8", fontWeight: 500 }}>
+            <div style={{ fontSize: 18, color: "#94A3B8", fontWeight: 500 }}>
               Ієрархічний контекст & 429 Hot Standby
             </div>
           </div>
           <span
             style={{
-              fontSize: 18,
+              fontSize: 16,
               background: `${accentColor}25`,
               color: accentColor,
-              padding: "6px 14px",
+              padding: "4px 12px",
               borderRadius: 8,
               fontWeight: 800,
               letterSpacing: 1,
@@ -118,17 +118,17 @@ export const Forma2BBlueprint: React.FC<Forma2BBlueprintProps> = ({
         </div>
 
         {/* Connector 1 with traveling photon */}
-        <div style={{ height: 18, display: "flex", justifyContent: "center", position: "relative" }}>
+        <div style={{ height: 12, display: "flex", justifyContent: "center", position: "relative" }}>
           <div style={{ width: 3, background: `${accentColor}55`, height: "100%" }} />
           <div
             style={{
               position: "absolute",
               top: `${pulsePhase * 100}%`,
-              width: 10,
-              height: 10,
+              width: 8,
+              height: 8,
               borderRadius: "50%",
               background: "#FFFFFF",
-              boxShadow: `0 0 14px ${accentColor}`,
+              boxShadow: `0 0 12px ${accentColor}`,
             }}
           />
         </div>
@@ -138,27 +138,27 @@ export const Forma2BBlueprint: React.FC<Forma2BBlueprintProps> = ({
           style={{
             background: "rgba(25, 20, 38, 0.92)",
             border: "1.5px solid rgba(168, 85, 247, 0.6)",
-            borderRadius: 14,
-            padding: "16px 20px",
+            borderRadius: 12,
+            padding: "12px 18px",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
           }}
         >
           <div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: "#F8FAFC", marginBottom: 4 }}>
+            <div style={{ fontSize: 24, fontWeight: 800, color: "#F8FAFC", marginBottom: 2 }}>
               🎙️ Голосовий Рушій (Gemini 3.8 Live)
             </div>
-            <div style={{ fontSize: 20, color: "#D8B4FE", fontWeight: 500 }}>
+            <div style={{ fontSize: 18, color: "#D8B4FE", fontWeight: 500 }}>
               24kHz PCM стрім • Golden Acting Standard
             </div>
           </div>
           <span
             style={{
-              fontSize: 18,
+              fontSize: 16,
               background: "rgba(168, 85, 247, 0.25)",
               color: "#D8B4FE",
-              padding: "6px 14px",
+              padding: "4px 12px",
               borderRadius: 8,
               fontWeight: 800,
               letterSpacing: 1,
@@ -170,17 +170,17 @@ export const Forma2BBlueprint: React.FC<Forma2BBlueprintProps> = ({
         </div>
 
         {/* Connector 2 with traveling photon */}
-        <div style={{ height: 18, display: "flex", justifyContent: "center", position: "relative" }}>
+        <div style={{ height: 12, display: "flex", justifyContent: "center", position: "relative" }}>
           <div style={{ width: 3, background: "rgba(168, 85, 247, 0.5)", height: "100%" }} />
           <div
             style={{
               position: "absolute",
               top: `${pulsePhase * 100}%`,
-              width: 10,
-              height: 10,
+              width: 8,
+              height: 8,
               borderRadius: "50%",
               background: "#C084FC",
-              boxShadow: "0 0 14px #C084FC",
+              boxShadow: "0 0 12px #C084FC",
             }}
           />
         </div>
@@ -190,27 +190,27 @@ export const Forma2BBlueprint: React.FC<Forma2BBlueprintProps> = ({
           style={{
             background: "rgba(16, 37, 30, 0.92)",
             border: "1.5px solid rgba(52, 211, 153, 0.6)",
-            borderRadius: 14,
-            padding: "16px 20px",
+            borderRadius: 12,
+            padding: "12px 18px",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
           }}
         >
           <div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: "#F8FAFC", marginBottom: 4 }}>
+            <div style={{ fontSize: 24, fontWeight: 800, color: "#F8FAFC", marginBottom: 2 }}>
               🎬 Автономний Рендер (Remotion 9:16)
             </div>
-            <div style={{ fontSize: 20, color: "#86EFAC", fontWeight: 500 }}>
+            <div style={{ fontSize: 18, color: "#86EFAC", fontWeight: 500 }}>
               Скелетний ліпсінк • Мультимодальна валідація
             </div>
           </div>
           <span
             style={{
-              fontSize: 18,
+              fontSize: 16,
               background: "rgba(52, 211, 153, 0.25)",
               color: "#86EFAC",
-              padding: "6px 14px",
+              padding: "4px 12px",
               borderRadius: 8,
               fontWeight: 800,
               letterSpacing: 1,
@@ -225,12 +225,12 @@ export const Forma2BBlueprint: React.FC<Forma2BBlueprintProps> = ({
       {/* Footer telemetry status */}
       <div
         style={{
-          marginTop: 20,
-          paddingTop: 12,
+          marginTop: 14,
+          paddingTop: 10,
           borderTop: `2px solid ${accentColor}25`,
           display: "flex",
           justifyContent: "space-between",
-          fontSize: 18,
+          fontSize: 16,
           color: "#94A3B8",
           fontFamily: "monospace",
           fontWeight: 700,

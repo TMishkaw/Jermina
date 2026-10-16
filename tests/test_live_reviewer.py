@@ -141,3 +141,34 @@ async def test_live_reviewer_self_evolution_feedback_loop(sample_video_path: Pat
 
     # In environments with or without DB, verify the contract
     assert isinstance(active_rules, list)
+
+
+@pytest.mark.asyncio
+async def test_live_reviewer_detects_occlusion_failure():
+    reviewer = LiveVideoReviewer()
+    occluded_review_text = """
+    === ЖИВА РЕЦЕНЗІЯ АРТ-ДИРЕКТОРА (GEMINI 3.8 LIVE STREAM) ===
+    [ХУК]: Початок динамічний.
+    [ОЗВУЧКА]: Відповідає стандарту.
+    [КОМПОЗИЦІЯ ТА ПЕРЕКРИТТЯ]: КРИТИЧНИЙ ДЕФЕКТ: плашка Forma 2-B перекриває голову та обличчя стикмена на половину відео!
+    [АНІМАЦІЯ]: Стикмен рухається, але його не видно.
+    [ДИЗАЙН ТА ТИПОГРАФІКА]: Шрифти хороші.
+    [СТИЛЬ ТА ПОРІВНЯННЯ]: Середній темп.
+    [ПОРІВНЯННЯ]: Не відповідає задуму через перекриття персонажа.
+    [ЩО ПОКРАЩИТИ]:
+    - Змістити плашку вище
+    - Винести персонажа на передній план
+    [ПРАВИЛА САМОВДОСКОНАЛЕННЯ]:
+    - УНИКАТИ: перекриття персонажа картою інтерфейсу
+    ОЦІНКА: 5.5/10
+    ВЕРДИКТ: NEEDS_CORRECTION
+    """
+    res = reviewer._parse_review_response(
+        raw_text=occluded_review_text,
+        video_path="sample_occluded.mp4",
+        duration=15.0,
+        frames_count=15,
+    )
+    assert res.status == ValidationStatus.NEEDS_CORRECTION
+    assert res.overall_score <= 6.0
+    assert "перекриває" in res.occlusion_evaluation

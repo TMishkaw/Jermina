@@ -54,9 +54,12 @@ class ProductionQueue:
         logger.info("Enqueued task %s for channel '%s': '%s'", task_id, channel_id, topic)
         return task
 
-    def get_next_pending(self) -> ProductionTask | None:
+    def get_next_pending(self, channel_id: str | None = None) -> ProductionTask | None:
         """Retrieves and locks the oldest QUEUED task, transitioning to PROCESSING."""
-        queued = [t for t in self._tasks.values() if t.status == QueueTaskStatus.QUEUED]
+        queued = [
+            t for t in self._tasks.values()
+            if t.status == QueueTaskStatus.QUEUED and (channel_id is None or t.channel_id == channel_id)
+        ]
         if not queued:
             return None
         # Sort by created_at ascending

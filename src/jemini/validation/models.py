@@ -56,6 +56,7 @@ class LiveReviewResult(BaseModel):
     visual_flow_evaluation: str = Field(description="Typography, pacing, artifacts, visual coherence")
     animation_evaluation: str = Field(default="", description="Smoothness of stickman animation, gesture variety, lip-sync coordination, no freezing")
     design_typography_evaluation: str = Field(default="", description="Typography readability on 1080x1920 mobile viewport, HUD hierarchy, contrast, color palette")
+    occlusion_evaluation: str = Field(default="", description="Strict check that UI cards and blueprints never occlude or overlap character head/body")
     style_benchmark_evaluation: str = Field(default="", description="Comparison with top-tier modern viral formats like Fireship, Hormozi dynamic captions, MrBeast pacing")
     self_evolution_rules: list[str] = Field(default_factory=list, description="Actionable negative or positive production constraints extracted for autonomous self-improvement")
     intent_discrepancies: str = Field(description="Comparison between expected intent and actual output")
