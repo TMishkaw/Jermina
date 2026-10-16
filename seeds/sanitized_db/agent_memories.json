@@ -14424,5 +14424,124 @@
       "video_path": "D:\\JerminaStudio\\JerminaDev\\output\\live_production\\test_render.mp4"
     },
     "created_at": "2026-10-16T18:58:10.427677"
+  },
+  {
+    "id": 215,
+    "channel_id": "stickman_lab",
+    "category": "experiment_experience",
+    "content": "[LIVE AUDIT SELF-EVOLUTION for stickman_lab | Video Viral_Short_Штучний_інтелект_для_відео.mp4]\nOverall Score: 8.2/10 (PASSED)\nOcclusion: Головний персонаж (стикмен) повністю відкритий на передньому плані (zIndex: 25). Плашки інтерфейсу Forma 2-B розташовані\nAnimation: Стикмен демонструє багату семантичну кінематику жестів: візуалізує тему розмови за допомогою плаваючих емодзі (💖 при поч\nDesign: Формат 1080x1920 витримано бездоганно. Всі написи на кресленнях Forma 2-B мають розмір від 24px і чудово читаються з екр\nRules:\n- УНИКАТИ: перекриття персонажа картами інтерфейсу\n- ОБОВ'ЯЗКОВО: синхронізувати жести та емодзі з ключовими словами сценарію",
+    "embedding": null,
+    "metadata_json": {
+      "rules": [
+        "УНИКАТИ: перекриття персонажа картами інтерфейсу",
+        "ОБОВ'ЯЗКОВО: синхронізувати жести та емодзі з ключовими словами сценарію"
+      ],
+      "score": 8.2,
+      "source": "gemini_3.8_live_review",
+      "video_path": "C:\\Users\\deftechpoint\\AppData\\Local\\Temp\\pytest-of-deftechpoint\\pytest-201\\test_e2e_pipeline_render_mock0\\Viral_Short_Штучний_інтелект_для_відео.mp4"
+    },
+    "created_at": "2026-10-16T19:03:03.126659"
+  },
+  {
+    "id": 216,
+    "channel_id": "stickman_lab",
+    "category": "experiment_experience",
+    "content": "[LIVE AUDIT SELF-EVOLUTION for stickman_lab | Video Viral_Short_Повна_архітектура_Jemini_169.mp4]\nOverall Score: 8.2/10 (PASSED)\nOcclusion: Головний персонаж (стикмен) повністю відкритий на передньому плані (zIndex: 25). Плашки інтерфейсу Forma 2-B розташовані\nAnimation: Стикмен демонструє багату семантичну кінематику жестів: візуалізує тему розмови за допомогою плаваючих емодзі (💖 при поч\nDesign: Формат 1080x1920 витримано бездоганно. Всі написи на кресленнях Forma 2-B мають розмір від 24px і чудово читаються з екр\nRules:\n- УНИКАТИ: перекриття персонажа картами інтерфейсу\n- ОБОВ'ЯЗКОВО: синхронізувати жести та емодзі з ключовими словами сценарію",
+    "embedding": null,
+    "metadata_json": {
+      "rules": [
+        "УНИКАТИ: перекриття персонажа картами інтерфейсу",
+        "ОБОВ'ЯЗКОВО: синхронізувати жести та емодзі з ключовими словами сценарію"
+      ],
+      "score": 8.2,
+      "source": "gemini_3.8_live_review",
+      "video_path": "C:\\Users\\deftechpoint\\AppData\\Local\\Temp\\pytest-of-deftechpoint\\pytest-201\\test_e2e_pipeline_render_wides0\\Viral_Short_Повна_архітектура_Jemini_169.mp4"
+    },
+    "created_at": "2026-10-16T19:03:04.939808"
+  },
+  {
+    "id": 217,
+    "channel_id": "stickman_lab",
+    "category": "experiment_experience",
+    "content": "[LIVE AUDIT SELF-EVOLUTION for stickman_lab | Video Viral_Short_Test_Readiness_QA_Run.mp4]\nOverall Score: 8.2/10 (PASSED)\nOcclusion: Головний персонаж (стикмен) повністю відкритий на передньому плані (zIndex: 25). Плашки інтерфейсу Forma 2-B розташовані\nAnimation: Стикмен демонструє багату семантичну кінематику жестів: візуалізує тему розмови за допомогою плаваючих емодзі (💖 при поч\nDesign: Формат 1080x1920 витримано бездоганно. Всі написи на кресленнях Forma 2-B мають розмір від 24px і чудово читаються з екр\nRules:\n- УНИКАТИ: перекриття персонажа картами інтерфейсу\n- ОБОВ'ЯЗКОВО: синхронізувати жести та емодзі з ключовими словами сценарію",
+    "embedding": null,
+    "metadata_json": {
+      "rules": [
+        "УНИКАТИ: перекриття персонажа картами інтерфейсу",
+        "ОБОВ'ЯЗКОВО: синхронізувати жести та емодзі з ключовими словами сценарію"
+      ],
+      "score": 8.2,
+      "source": "gemini_3.8_live_review",
+      "video_path": "D:\\JerminaStudio\\JerminaDev\\temp\\qa_dry_run\\Viral_Short_Test_Readiness_QA_Run.mp4"
+    },
+    "created_at": "2026-10-16T19:03:05.246967"
+  },
+  {
+    "id": 218,
+    "channel_id": "cyber_matrix",
+    "category": "experiment_experience",
+    "content": "[RETENTION LEARNING for cyber_matrix | Video vid_cyber_drop]\nPerformance Tier: CRITICAL\nRetention: 3s=48.0%, 15s=28.0%, End=20.0%\nWeaknesses: Критичний провал хука: лише 48.0% глядачів пройшли 3-тю секунду.; Провал у середині ролика: відтік 20.0% між 3-ю та 15-ю секундами.; Низький догляд до кінця: 20.0% (ціль: 35.0%).\nActionable Insights: Перші 3 секунди повинні містити екстремальний парадокс або рух, без будь-яких привітань чи вступу.; Сцена розв'язання проблеми надто розтягнута або містить складну термінологію.; Фінал передбачуваний; заклик до дії (CTA) звучить занадто банально.\nNegative Prompt Rules: ЗАБОРОНЕНО: починати з привітань, довгих пауз чи очевидних запитань у першій сцені.; ЗАБОРОНЕНО: перевантажувати другу сцену академічними термінами чи монотонним текстом.; УНИКАТИ: стандартних фраз 'підпишись на канал'; інтегрувати CTA як інтригу наступного відео.",
+    "embedding": null,
+    "metadata_json": {
+      "tier": "critical",
+      "rules": [
+        "ЗАБОРОНЕНО: починати з привітань, довгих пауз чи очевидних запитань у першій сцені.",
+        "ЗАБОРОНЕНО: перевантажувати другу сцену академічними термінами чи монотонним текстом.",
+        "УНИКАТИ: стандартних фраз 'підпишись на канал'; інтегрувати CTA як інтригу наступного відео."
+      ],
+      "video_id": "vid_cyber_drop"
+    },
+    "created_at": "2026-10-16T19:03:05.500416"
+  },
+  {
+    "id": 219,
+    "channel_id": "test_channel",
+    "category": "experiment_experience",
+    "content": "[LIVE AUDIT SELF-EVOLUTION for test_channel | Video test_render.mp4]\nOverall Score: 8.2/10 (PASSED)\nOcclusion: Головний персонаж (стикмен) повністю відкритий на передньому плані (zIndex: 25). Плашки інтерфейсу Forma 2-B розташовані\nAnimation: Стикмен демонструє багату семантичну кінематику жестів: візуалізує тему розмови за допомогою плаваючих емодзі (💖 при поч\nDesign: Формат 1080x1920 витримано бездоганно. Всі написи на кресленнях Forma 2-B мають розмір від 24px і чудово читаються з екр\nRules:\n- УНИКАТИ: перекриття персонажа картами інтерфейсу\n- ОБОВ'ЯЗКОВО: синхронізувати жести та емодзі з ключовими словами сценарію",
+    "embedding": null,
+    "metadata_json": {
+      "rules": [
+        "УНИКАТИ: перекриття персонажа картами інтерфейсу",
+        "ОБОВ'ЯЗКОВО: синхронізувати жести та емодзі з ключовими словами сценарію"
+      ],
+      "score": 8.2,
+      "source": "gemini_3.8_live_review",
+      "video_path": "D:\\JerminaStudio\\JerminaDev\\output\\live_production\\test_render.mp4"
+    },
+    "created_at": "2026-10-16T19:03:05.661601"
+  },
+  {
+    "id": 220,
+    "channel_id": "stickman_lab",
+    "category": "experiment_experience",
+    "content": "[LIVE AUDIT SELF-EVOLUTION for stickman_lab | Video test_render.mp4]\nOverall Score: 8.2/10 (PASSED)\nOcclusion: Головний персонаж (стикмен) повністю відкритий на передньому плані (zIndex: 25). Плашки інтерфейсу Forma 2-B розташовані\nAnimation: Стикмен демонструє багату семантичну кінематику жестів: візуалізує тему розмови за допомогою плаваючих емодзі (💖 при поч\nDesign: Формат 1080x1920 витримано бездоганно. Всі написи на кресленнях Forma 2-B мають розмір від 24px і чудово читаються з екр\nRules:\n- УНИКАТИ: перекриття персонажа картами інтерфейсу\n- ОБОВ'ЯЗКОВО: синхронізувати жести та емодзі з ключовими словами сценарію",
+    "embedding": null,
+    "metadata_json": {
+      "rules": [
+        "УНИКАТИ: перекриття персонажа картами інтерфейсу",
+        "ОБОВ'ЯЗКОВО: синхронізувати жести та емодзі з ключовими словами сценарію"
+      ],
+      "score": 8.2,
+      "source": "gemini_3.8_live_review",
+      "video_path": "D:\\JerminaStudio\\JerminaDev\\output\\live_production\\test_render.mp4"
+    },
+    "created_at": "2026-10-16T19:03:05.741805"
+  },
+  {
+    "id": 221,
+    "channel_id": "stickman_evolution_test",
+    "category": "experiment_experience",
+    "content": "[LIVE AUDIT SELF-EVOLUTION for stickman_evolution_test | Video test_render.mp4]\nOverall Score: 8.2/10 (PASSED)\nOcclusion: Головний персонаж (стикмен) повністю відкритий на передньому плані (zIndex: 25). Плашки інтерфейсу Forma 2-B розташовані\nAnimation: Стикмен демонструє багату семантичну кінематику жестів: візуалізує тему розмови за допомогою плаваючих емодзі (💖 при поч\nDesign: Формат 1080x1920 витримано бездоганно. Всі написи на кресленнях Forma 2-B мають розмір від 24px і чудово читаються з екр\nRules:\n- УНИКАТИ: перекриття персонажа картами інтерфейсу\n- ОБОВ'ЯЗКОВО: синхронізувати жести та емодзі з ключовими словами сценарію",
+    "embedding": null,
+    "metadata_json": {
+      "rules": [
+        "УНИКАТИ: перекриття персонажа картами інтерфейсу",
+        "ОБОВ'ЯЗКОВО: синхронізувати жести та емодзі з ключовими словами сценарію"
+      ],
+      "score": 8.2,
+      "source": "gemini_3.8_live_review",
+      "video_path": "D:\\JerminaStudio\\JerminaDev\\output\\live_production\\test_render.mp4"
+    },
+    "created_at": "2026-10-16T19:03:05.806432"
   }
 ]

@@ -18,6 +18,7 @@ from googleapiclient.http import MediaFileUpload
 from pydantic import BaseModel, Field
 from sqlalchemy import text
 
+from jemini.publishing.category_selector import CategorySelector, YouTubeCategory
 from jemini.storage.database import AsyncSessionLocal
 
 logger = logging.getLogger(__name__)
@@ -42,7 +43,7 @@ class YouTubeShortMetadata(BaseModel):
     title: str
     description: str = ""
     tags: list[str] = Field(default_factory=lambda: ["Shorts", "AI", "Jemini", "Tech"])
-    category_id: str = "28"  # 28 = Science & Technology
+    category_id: str = "auto"  # "auto" for dynamic semantic category selection, or explicit ID ("28", "27", "23")
     privacy_status: PublishingPrivacyStatus = PublishingPrivacyStatus.UNLISTED
     made_for_kids: bool = False
 
@@ -55,6 +56,7 @@ class PublishedVideoResult(BaseModel):
     title: str
     privacy_status: str
     uploaded_at: str
+    category_id: str = "28"
 
     @property
     def published_url(self) -> str:
@@ -178,6 +180,24 @@ class YouTubePublisher:
 
         formatted_title = self._format_shorts_title(metadata.title) if is_short else metadata.title[:100]
 
+        # 1. Resolve YouTube Category dynamically if "auto", empty, or None
+        resolved_category_id = metadata.category_id
+        if resolved_category_id in ("auto", "", None):
+            cat_match = CategorySelector.select_category(
+                title=metadata.title,
+                description=metadata.description,
+                tags=metadata.tags,
+            )
+            resolved_category_id = cat_match.category_id
+            logger.info(
+                "✓ Automatically selected YouTube category: %s (%s) | %s",
+                resolved_category_id,
+                cat_match.category_name,
+                cat_match.reasoning,
+            )
+        else:
+            logger.info("Using explicit YouTube category ID: %s", resolved_category_id)
+
         if mock_mode:
             logger.info("Executing mock YouTube publication for '%s' (is_short=%s)...", formatted_title, is_short)
             video_id = "mock_shorts_yt123" if is_short else "mock_video_yt16x9"
@@ -188,6 +208,7 @@ class YouTubePublisher:
                 title=formatted_title,
                 privacy_status=metadata.privacy_status.value,
                 uploaded_at=datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                category_id=resolved_category_id,
             )
             await self._log_upload_to_db(channel_id, res)
             return res
@@ -201,7 +222,7 @@ class YouTubePublisher:
                     "title": formatted_title,
                     "description": metadata.description,
                     "tags": metadata.tags,
-                    "categoryId": metadata.category_id,
+                    "categoryId": resolved_category_id,
                 },
                 "status": {
                     "privacyStatus": metadata.privacy_status.value,
@@ -222,7 +243,7 @@ class YouTubePublisher:
                 media_body=media,
             )
 
-            logger.info("Uploading '%s' (%.2f MB) to YouTube...", vid_file.name, vid_file.stat().st_size / (1024 * 1024))
+            logger.info("Uploading '%s' (%.2f MB) to YouTube (Category ID: %s)...", vid_file.name, vid_file.stat().st_size / (1024 * 1024), resolved_category_id)
             response = None
             while response is None:
                 status, response = request.next_chunk()
@@ -240,6 +261,7 @@ class YouTubePublisher:
                 title=formatted_title,
                 privacy_status=metadata.privacy_status.value,
                 uploaded_at=datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                category_id=resolved_category_id,
             )
 
         result = await asyncio.to_thread(_upload_worker)
