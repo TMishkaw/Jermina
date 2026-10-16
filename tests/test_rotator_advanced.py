@@ -30,10 +30,10 @@ async def test_model_specific_cooldown_isolation():
     with pytest.raises(QuotaExceededException):
         await rotator.handle_429("solo_key", model_name="gemini-2.5-pro", retry_after=10.0, tier=TaskTier.COMPLEX)
 
-    # The SAME key MUST still be available for light routine model (ROUTINE tier: gemini-2.5-flash)
+    # The SAME key MUST still be available for light routine model (ROUTINE tier: gemini-3.1-flash-lite)
     routine_res = await rotator.get_active_key(tier=TaskTier.ROUTINE)
     assert routine_res.key_string == "solo_key"
-    assert routine_res.model_name == "gemini-2.5-flash"
+    assert routine_res.model_name == "gemini-3.1-flash-lite"
 
 @pytest.mark.asyncio
 async def test_hot_standby_failover_to_paid():
