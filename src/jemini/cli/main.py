@@ -939,6 +939,10 @@ def main():
     docs_parser.add_argument("--section", "-s", type=str, default=None, help="Filter by section (DevDocs, LiveAPIDocs, wiki, guidelines, etc.)")
     docs_parser.add_argument("--doc", "-d", type=str, default=None, help="Document name to retrieve (e.g. StickmanKinematics, git_flow)")
 
+    # Subcommand: sync-db-knowledge
+    sync_db_parser = subparsers.add_parser("sync-db-knowledge", help="Sync verified DB memories, motions, and metrics into DevDocs/DatabaseKnowledgeBase.md")
+    sync_db_parser.add_argument("--output", "-o", type=str, default="docs/studio_knowledge/DevDocs/DatabaseKnowledgeBase.md", help="Destination markdown file")
+
     args = parser.parse_args()
 
     if args.command == "render":
@@ -1118,6 +1122,11 @@ def main():
             else:
                 print(f"Error: Document '{doc_id}' not found in docs/.")
                 sys.exit(1)
+    elif args.command == "sync-db-knowledge":
+        from scripts.sync_db_to_docs import generate_db_knowledge_doc
+
+        out = asyncio.run(generate_db_knowledge_doc(output_path=args.output))
+        print(f"✓ Database knowledge successfully synchronized to: {out}")
 
 
 if __name__ == "__main__":

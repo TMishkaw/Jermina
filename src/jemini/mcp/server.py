@@ -149,6 +149,33 @@ TOOLS = [
             "required": ["article_name"],
         },
     },
+    {
+        "name": "jemini_query_db_knowledge",
+        "description": "Dynamically queries long-term agent memories, stickman motion presets, or YouTube channel metrics from PostgreSQL (or sanitized fallback).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "topic": {
+                    "type": "string",
+                    "enum": ["memories", "motions", "channel", "videos"],
+                    "description": "Knowledge topic to retrieve from the database",
+                },
+                "query": {
+                    "type": "string",
+                    "description": "Optional keyword search query",
+                },
+                "category": {
+                    "type": "string",
+                    "description": "Optional category filter for memories (e.g. 'context', 'experiment_experience', 'bootstrap')",
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Maximum number of records to return (default: 10, max: 50)",
+                },
+            },
+            "required": ["topic"],
+        },
+    },
 ]
 
 
@@ -347,6 +374,15 @@ class MCPServer:
             if content is None:
                 return f"Error: Wiki article '{article_name}' not found in docs/wiki/."
             return content
+
+        if name == "jemini_query_db_knowledge":
+            from jemini.mcp.db_knowledge import query_db_knowledge_sync
+
+            topic = args.get("topic", "memories")
+            query = args.get("query")
+            category = args.get("category")
+            limit = args.get("limit", 10)
+            return query_db_knowledge_sync(topic=topic, query=query, category=category, limit=limit)
 
         return f"Error: Unknown tool '{name}'."
 

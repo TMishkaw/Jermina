@@ -60,6 +60,7 @@ def test_mcp_tools_list(mcp_server):
     assert "jemini_api_call" in tool_names
     assert "jemini_list_wiki_articles" in tool_names
     assert "jemini_get_wiki_article" in tool_names
+    assert "jemini_query_db_knowledge" in tool_names
 
 
 def test_mcp_call_search_docs(mcp_server):
@@ -244,6 +245,67 @@ def test_mcp_call_wiki_tools(mcp_server):
     }
     resp_missing = mcp_server.handle_request(req_missing)
     assert "not found" in resp_missing["result"]["content"][0]["text"]
+
+
+def test_mcp_call_db_knowledge(mcp_server):
+    # 1. Query memories
+    req_mem = {
+        "jsonrpc": "2.0",
+        "id": 30,
+        "method": "tools/call",
+        "params": {
+            "name": "jemini_query_db_knowledge",
+            "arguments": {
+                "topic": "memories",
+                "category": "context",
+                "limit": 3,
+            },
+        },
+    }
+    resp_mem = mcp_server.handle_request(req_mem)
+    assert resp_mem["id"] == 30
+    text_mem = resp_mem["result"]["content"][0]["text"]
+    assert "Agent Memories Knowledge" in text_mem
+    assert "CONTEXT" in text_mem or "context" in text_mem
+
+    # 2. Query motions
+    req_mot = {
+        "jsonrpc": "2.0",
+        "id": 31,
+        "method": "tools/call",
+        "params": {
+            "name": "jemini_query_db_knowledge",
+            "arguments": {
+                "topic": "motions",
+                "query": "stop",
+                "limit": 5,
+            },
+        },
+    }
+    resp_mot = mcp_server.handle_request(req_mot)
+    assert resp_mot["id"] == 31
+    text_mot = resp_mot["result"]["content"][0]["text"]
+    assert "Stickman Motions Knowledge" in text_mot
+    assert "stop" in text_mot
+
+    # 3. Query channel/videos
+    req_vid = {
+        "jsonrpc": "2.0",
+        "id": 32,
+        "method": "tools/call",
+        "params": {
+            "name": "jemini_query_db_knowledge",
+            "arguments": {
+                "topic": "videos",
+                "limit": 3,
+            },
+        },
+    }
+    resp_vid = mcp_server.handle_request(req_vid)
+    assert resp_vid["id"] == 32
+    text_vid = resp_vid["result"]["content"][0]["text"]
+    assert "YouTube Channel Performance Knowledge" in text_vid
+    assert "Top Performing Videos" in text_vid
 
 
 def test_mcp_unknown_method(mcp_server):
