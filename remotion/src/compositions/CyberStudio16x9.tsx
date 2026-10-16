@@ -65,10 +65,14 @@ export const CyberStudio16x9: React.FC<{ config?: CyberStudio16x9Config }> = ({
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  // Find active stickman cue
-  const activeCue = config.stickmanCues.find(
+  // Safe stickman cues fallback
+  const cues = config.stickmanCues && config.stickmanCues.length > 0
+    ? config.stickmanCues
+    : defaultCyberStudio16x9Config.stickmanCues;
+
+  const activeCue = cues.find(
     (c) => frame >= c.fromFrame && frame < c.fromFrame + c.durationInFrames
-  ) || config.stickmanCues[0];
+  ) || cues[0];
 
   // RMS reactivity
   const rms = config.audioRms && config.audioRms[frame] !== undefined ? config.audioRms[frame] : 0.05;

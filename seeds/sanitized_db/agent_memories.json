@@ -14169,5 +14169,22 @@
       "video_path": "D:\\JerminaStudio\\JerminaDev\\output\\live_production\\test_render.mp4"
     },
     "created_at": "2026-10-16T18:47:09.172895"
+  },
+  {
+    "id": 200,
+    "channel_id": "stickman_lab",
+    "category": "experiment_experience",
+    "content": "[LIVE AUDIT SELF-EVOLUTION for stickman_lab | Video Viral_Short_Повна_архітектура_Jemini_169.mp4]\nOverall Score: 8.2/10 (PASSED)\nOcclusion: Головний персонаж (стикмен) повністю відкритий на передньому плані (zIndex: 25). Плашки інтерфейсу Forma 2-B розташовані\nAnimation: Стикмен демонструє багату семантичну кінематику жестів: візуалізує тему розмови за допомогою плаваючих емодзі (💖 при поч\nDesign: Формат 1080x1920 витримано бездоганно. Всі написи на кресленнях Forma 2-B мають розмір від 24px і чудово читаються з екр\nRules:\n- УНИКАТИ: перекриття персонажа картами інтерфейсу\n- ОБОВ'ЯЗКОВО: синхронізувати жести та емодзі з ключовими словами сценарію",
+    "embedding": null,
+    "metadata_json": {
+      "rules": [
+        "УНИКАТИ: перекриття персонажа картами інтерфейсу",
+        "ОБОВ'ЯЗКОВО: синхронізувати жести та емодзі з ключовими словами сценарію"
+      ],
+      "score": 8.2,
+      "source": "gemini_3.8_live_review",
+      "video_path": "C:\\Users\\deftechpoint\\AppData\\Local\\Temp\\pytest-of-deftechpoint\\pytest-197\\test_e2e_pipeline_render_wides0\\Viral_Short_Повна_архітектура_Jemini_169.mp4"
+    },
+    "created_at": "2026-10-16T18:49:15.681036"
   }
 ]
