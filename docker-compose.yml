@@ -3,7 +3,8 @@ services:
     image: pgvector/pgvector:pg16
     container_name: jemini_postgres
     restart: unless-stopped
-    network_mode: host
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-jemini}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}

@@ -2,9 +2,11 @@
 
 import asyncio
 import sys
-from jemini.storage.database import engine, init_db
-from jemini.storage.models import Base
+
 from sqlalchemy import text
+
+from jemini.storage.database import engine, init_db
+
 
 async def check_and_init():
     print("Testing connection to PostgreSQL...")
@@ -28,7 +30,7 @@ async def check_and_init():
         await init_db()
         print("✓ All tables initialized successfully!")
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"Connection error: {e}", file=sys.stderr)
         print("\nMake sure Docker Desktop is started and 'docker compose up -d' has been executed.", file=sys.stderr)
         sys.exit(1)
