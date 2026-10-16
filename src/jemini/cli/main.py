@@ -78,10 +78,18 @@ async def run_e2e_render(
         short_script = GeneratedShortScript.model_validate(data)
     else:
         active_topic = topic or "Як штучний інтелект Jemini створює відео автономно"
+        from jemini.analytics.feedback_loop import AudienceRetentionFeedbackLoop
+
+        feedback = AudienceRetentionFeedbackLoop()
+        negative_rules = await feedback.get_active_negative_rules(profile.channel_id)
+        if negative_rules:
+            logger.info("Applying %d learned retention rules for '%s'...", len(negative_rules), profile.channel_id)
+
         logger.info("Generating viral script for topic: '%s'...", active_topic)
         short_script = await script_gen.generate_script(
             topic=active_topic,
             profile=profile,
+            negative_rules=negative_rules,
             mock_mode=mock_mode,
         )
 
@@ -384,6 +392,52 @@ async def handle_queue(list_tasks: bool, process_next: bool, mock_mode: bool) ->
     print("=" * 85 + "\n")
 
 
+async def handle_feedback(
+    channel_id: str,
+    video_id: str,
+    hook_rate: float,
+    midpoint_rate: float,
+    completion_rate: float,
+) -> None:
+    """Processes retention analytics and injects learned negative prompt constraints."""
+    from jemini.analytics.feedback_loop import AudienceRetentionFeedbackLoop
+    from jemini.analytics.models import RetentionMetrics
+
+    feedback = AudienceRetentionFeedbackLoop()
+    metrics = RetentionMetrics(
+        video_id=video_id,
+        channel_id=channel_id,
+        retention_at_3s=hook_rate,
+        retention_at_15s=midpoint_rate,
+        completion_rate=completion_rate,
+    )
+    result = feedback.analyze_metrics(metrics)
+
+    print("\n" + "=" * 80)
+    print(f"       AUDIENCE RETENTION ANALYSIS: {channel_id.upper()} (Video: {video_id})")
+    print("=" * 80)
+    print(f"Performance Tier: {result.performance_tier.value.upper()}")
+    print(f"Hook (3s): {result.hook_score:.1f}% | Midpoint (15s): {result.pacing_score:.1f}% | Completion: {result.retention_score:.1f}%")
+    print("-" * 80)
+    if result.identified_weaknesses:
+        print("IDENTIFIED RETENTION WEAKNESSES:")
+        for w in result.identified_weaknesses:
+            print(f"  [!] {w}")
+    print("-" * 80)
+    if result.actionable_learnings:
+        print("ACTIONABLE CREATIVE INSIGHTS:")
+        for ins in result.actionable_learnings:
+            print(f"  [✓] {ins}")
+    print("-" * 80)
+    if result.negative_prompt_rules:
+        print("NEW NEGATIVE PROMPT RULES (SELF-EVOLUTION):")
+        for r in result.negative_prompt_rules:
+            print(f"  [+] {r}")
+    print("=" * 80 + "\n")
+
+    await feedback.persist_learning_to_memory(metrics, result)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Jemini Autonomous Video Production CLI")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -413,6 +467,14 @@ def main():
     queue_parser.add_argument("--list", action="store_true", help="List tasks in queue")
     queue_parser.add_argument("--process-next", action="store_true", help="Process and render next queued task")
     queue_parser.add_argument("--mock-mode", action="store_true", help="Run queue processing in mock mode")
+
+    # Subcommand: feedback
+    feedback_parser = subparsers.add_parser("feedback", help="Analyze post-publishing retention and self-evolve prompts")
+    feedback_parser.add_argument("--channel", type=str, default="stickman_lab", help="Channel profile ID")
+    feedback_parser.add_argument("--video-id", type=str, required=True, help="ID of analyzed video")
+    feedback_parser.add_argument("--hook-rate", type=float, required=True, help="Hook retention percentage at 3 seconds (0-100)")
+    feedback_parser.add_argument("--midpoint-rate", type=float, default=45.0, help="Midpoint retention percentage at 15 seconds (0-100)")
+    feedback_parser.add_argument("--completion-rate", type=float, default=35.0, help="Completion rate percentage (0-100)")
 
     # Subcommand: test-readiness
     subparsers.add_parser("test-readiness", help="Run pre-flight Matrix Readiness Suite for QA handoff")
@@ -448,6 +510,16 @@ def main():
                 list_tasks=args.list,
                 process_next=args.process_next,
                 mock_mode=args.mock_mode,
+            )
+        )
+    elif args.command == "feedback":
+        asyncio.run(
+            handle_feedback(
+                channel_id=args.channel,
+                video_id=args.video_id,
+                hook_rate=args.hook_rate,
+                midpoint_rate=args.midpoint_rate,
+                completion_rate=args.completion_rate,
             )
         )
     elif args.command == "test-readiness":

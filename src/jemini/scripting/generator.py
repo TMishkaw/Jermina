@@ -36,11 +36,23 @@ class ScriptGenerator:
     def __init__(self, rotator: APIKeyRotator | None = None):
         self.rotator = rotator
 
-    def _build_prompt(self, topic: str, profile: ChannelProfile | None = None) -> str:
+    def _build_prompt(
+        self,
+        topic: str,
+        profile: ChannelProfile | None = None,
+        negative_rules: list[str] | None = None,
+    ) -> str:
         channel_name = profile.channel_name if profile else "Stickman Tech Lab"
         tone = profile.tone_of_voice if profile else "energetic, witty, authoritative"
         voice = profile.voice_name if profile and profile.voice_name else "Zephyr"
         keywords = ", ".join(profile.niche_keywords) if profile and profile.niche_keywords else "AI, Tech"
+
+        rules_clause = ""
+        if negative_rules:
+            rules_clause = (
+                "\n\nПРАВИЛА САМОНАВЧАННЯ (ВИПРАВЛЕННЯ ВІДТОКУ АУДИТОРІЇ З RETENTION FEEDBACK):\n"
+                + "\n".join(f"- {r}" for r in negative_rules)
+            )
 
         return (
             f"Ти — провідний сценарний редактор вірусних 9:16 Shorts/Reels для каналу '{channel_name}'.\n"
@@ -56,7 +68,7 @@ class ScriptGenerator:
             "ЗОЛОТИЙ СТАНДАРТ ОЗВУЧЕННЯ:\n"
             "- Жодних синтетичних 'ха-ха'! Використовуй ремарки емоцій, живі смішки та зітхання.\n"
             f"- Голосовий архетип: '{voice}'.\n"
-            "- Текст кожної сцени має бути до 30 слів (під безпечний ліміт Live API)."
+            f"- Текст кожної сцени має бути до 30 слів (під безпечний ліміт Live API).{rules_clause}"
         )
 
     def _get_mock_script(self, topic: str, profile: ChannelProfile | None = None) -> GeneratedShortScript:
@@ -117,6 +129,7 @@ class ScriptGenerator:
         self,
         topic: str,
         profile: ChannelProfile | None = None,
+        negative_rules: list[str] | None = None,
         mock_mode: bool = False,
     ) -> GeneratedShortScript:
         """Generates structured script adhering to Pydantic contract."""
@@ -133,7 +146,7 @@ class ScriptGenerator:
                 logger.warning("Failed to get key from rotator for script, fallback: %s", exc)
 
         client = genai.Client(api_key=api_key)
-        prompt = self._build_prompt(topic, profile)
+        prompt = self._build_prompt(topic, profile, negative_rules=negative_rules)
 
         try:
             response = await client.aio.models.generate_content(

@@ -1,12 +1,11 @@
-from jemini.analytics.escalation import EscalationManager, FeatureGapReport
-from jemini.analytics.experiments import EvolutionLoop, ExperimentHypothesis
-from jemini.analytics.metrics import MetricsCollector, VideoMetrics
+"""Analytics, Audience Retention Feedback Loop, and Self-Evolution package."""
+
+from jemini.analytics.feedback_loop import AudienceRetentionFeedbackLoop
+from jemini.analytics.models import FeedbackAnalysisResult, PerformanceTier, RetentionMetrics
 
 __all__ = [
-    "EscalationManager",
-    "EvolutionLoop",
-    "ExperimentHypothesis",
-    "FeatureGapReport",
-    "MetricsCollector",
-    "VideoMetrics",
+    "AudienceRetentionFeedbackLoop",
+    "FeedbackAnalysisResult",
+    "PerformanceTier",
+    "RetentionMetrics",
 ]
