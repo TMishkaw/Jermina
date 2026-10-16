@@ -37,3 +37,21 @@
 - **Step 3 (Defect Fix):** Resolve the localized bug.
 - **Step 4 (Regression Lock):** Write a dedicated isolated `pytest` unit test reproducing the exact failure before merging to `dev`.
 
+## 7. Visual Acting & Pacing Standard (Stickman Kinematics)
+- **Pacing Constraint (5–10 Presets):** Videos must feature exactly 5 to 10 deliberate acting beats (`target_count_range=(5, 10)`), with natural staging duration (~3.5–5.5 seconds per pose). Micro-cue flickering (<1.5s) and spastic prop cycling are strictly prohibited.
+- **S-Curve Pose Blending:** 12-frame smoothstep interpolation (`interpolatePose`) between all consecutive cue transitions to eliminate robotic angle snapping.
+- **Overlapping Action:** Forearms must lag shoulders by $\approx 90\text{ ms}$ (secondary motion) to break mechanical metronome movement.
+- **Organic Bezier Spine:** The spine is rendered via a curved quadratic Bezier path (`M 0 hip Q spineBend mid 0 shoulder`) with continuous breathing flex.
+- **Audio RMS Reactivity:** Live speech volume (`audioRms`) drives gesture amplitude and nodding cadence.
+- **Autonomous A/B Testing Evolution:** Missing gestures or uncovered topics trigger `MovementABTester` evaluated by `gemini-3.8-live`. A winning preset is committed to PostgreSQL and `MotionLibraryManager` ONLY after **2 consecutive wins**.
+
+## 8. Database Persistence & Zero-Leak Protocol
+- **Container Restart Immunity:** All operational knowledge (`agent_memories`, `stickman_motions`, `youtube_*`) must be safely restorable via `jemini db-export` and `jemini db-restore`.
+- **Zero-Leak Sanitization:** Never commit API keys or auth tokens to git (`config/client_secret.json` is git-ignored, and `export_sanitized_db` strictly blacklists secret tables).
+- **Automated Pre-Commit Hook:** `.git/hooks/pre-commit` runs on every git commit, automatically dumping fresh sanitized JSON tables into `seeds/sanitized_db/`.
+
+## 9. Gemini 3.8 Live API Constraints
+- **WebSocket Parameters:** Do NOT pass `thinking_config` inside `LiveConnectConfig` when opening real-time audio/video review WebSockets (causes close code `1007`). Extended thinking config is only supported on standard `client.models.generate_content`.
+- **Streaming Audio/Video:** Stream 1 FPS video frames and 16kHz mono PCM chunks for multimodal evaluation.
+
+
