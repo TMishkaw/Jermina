@@ -51,6 +51,7 @@ async def run_e2e_render(
     mock_mode: bool = False,
     skip_validation: bool = False,
     publish_youtube: bool = False,
+    publish_tiktok: bool = False,
     operator_review: bool = False,
     channel_id: str = "stickman_lab",
     max_correction_attempts: int = 2,
@@ -204,6 +205,30 @@ async def run_e2e_render(
             )
             logger.info("✓ YouTube Short Published: %s", published_res.shorts_url)
 
+    # 5.5 TikTok Auto-Publishing (Optional)
+    published_tiktok_res = None
+    if publish_tiktok:
+        from jemini.publishing.tiktok_publisher import TikTokMetadata, TikTokPublisher
+
+        tt_publisher = TikTokPublisher()
+        if not tt_publisher.has_credentials() and not mock_mode:
+            logger.warning("TikTok credentials missing. Skipping TikTok upload.")
+        else:
+            tt_meta = TikTokMetadata(
+                title=short_script.title,
+                description=short_script.hook_text,
+            )
+            published_tiktok_res = await tt_publisher.publish_video(
+                video_path=final_video,
+                metadata=tt_meta,
+                channel_id=profile.channel_id,
+                mock_mode=mock_mode,
+            )
+            if published_tiktok_res.success:
+                logger.info("✓ TikTok Short Published: %s", published_tiktok_res.status)
+            else:
+                logger.warning("! TikTok publish failed: %s", published_tiktok_res.error)
+
     # 6. Operator Review Control Plane Enrollment (Optional Gate)
     operator_sub_id = None
     if operator_review:
@@ -228,6 +253,7 @@ async def run_e2e_render(
         "validation_score": validation_card.overall_score if validation_card else None,
         "validation_status": validation_card.status.value if validation_card else "SKIPPED",
         "youtube_shorts_url": published_res.shorts_url if published_res else None,
+        "tiktok_status": published_tiktok_res.status if published_tiktok_res else None,
         "operator_submission_id": operator_sub_id,
     }
 
@@ -463,6 +489,7 @@ async def handle_operator(
     approve_id: str | None,
     reject_id: str | None,
     publish_youtube: bool,
+    publish_tiktok: bool,
     mock_mode: bool,
 ) -> None:
     """Manages human-in-the-loop review, one-click approvals, and video archival."""
@@ -471,7 +498,12 @@ async def handle_operator(
     service = OperatorReviewService()
 
     if approve_id:
-        sub = await service.approve(approve_id, publish_youtube=publish_youtube, mock_mode=mock_mode)
+        sub = await service.approve(
+            approve_id,
+            publish_youtube=publish_youtube,
+            publish_tiktok=publish_tiktok,
+            mock_mode=mock_mode,
+        )
         print(f"\n✓ Approved submission {sub.submission_id} (Status: {sub.status.value.upper()})")
         if sub.published_video_id:
             print(f"  Published Video ID: {sub.published_video_id}")
@@ -512,6 +544,7 @@ def main():
     render_parser.add_argument("--mock-mode", action="store_true", help="Execute in offline mock mode")
     render_parser.add_argument("--skip-validation", action="store_true", help="Skip multimodal validation loop")
     render_parser.add_argument("--publish-youtube", action="store_true", help="Upload rendered video to YouTube Shorts")
+    render_parser.add_argument("--publish-tiktok", action="store_true", help="Upload rendered video to TikTok")
     render_parser.add_argument("--operator-review", action="store_true", help="Submit to operator review plane instead of publishing immediately")
 
     # Subcommand: channels
@@ -544,6 +577,7 @@ def main():
     operator_parser.add_argument("--approve", type=str, help="Submission ID to approve")
     operator_parser.add_argument("--reject", type=str, help="Submission ID to reject and archive")
     operator_parser.add_argument("--publish-youtube", action="store_true", help="Publish to YouTube upon approval")
+    operator_parser.add_argument("--publish-tiktok", action="store_true", help="Publish to TikTok upon approval")
     operator_parser.add_argument("--mock-mode", action="store_true", help="Execute approval in mock mode")
 
     # Subcommand: test-readiness
@@ -561,6 +595,7 @@ def main():
                 mock_mode=args.mock_mode,
                 skip_validation=args.skip_validation,
                 publish_youtube=args.publish_youtube,
+                publish_tiktok=args.publish_tiktok,
                 operator_review=args.operator_review,
             )
         )
@@ -600,6 +635,7 @@ def main():
                 approve_id=args.approve,
                 reject_id=args.reject,
                 publish_youtube=args.publish_youtube,
+                publish_tiktok=args.publish_tiktok,
                 mock_mode=args.mock_mode,
             )
         )

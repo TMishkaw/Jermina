@@ -88,9 +88,10 @@ class OperatorReviewService:
         self,
         submission_id: str,
         publish_youtube: bool = False,
+        publish_tiktok: bool = False,
         mock_mode: bool = False,
     ) -> ReviewSubmission:
-        """Approves a video and optionally dispatches it to YouTube Shorts."""
+        """Approves a video and optionally dispatches it to YouTube Shorts and/or TikTok."""
         sub = self._submissions.get(submission_id)
         if not sub:
             msg = f"Submission {submission_id} not found."
@@ -113,7 +114,26 @@ class OperatorReviewService:
                 mock_mode=mock_mode,
             )
             sub.published_video_id = pub_res.video_id
-            logger.info("✓ Approved and published submission %s: %s", submission_id, pub_res.published_url)
+            logger.info("✓ Approved and published submission %s to YouTube: %s", submission_id, pub_res.published_url)
+
+        if publish_tiktok:
+            from jemini.publishing.tiktok_publisher import TikTokMetadata, TikTokPublisher
+
+            tt_publisher = TikTokPublisher()
+            tt_meta = TikTokMetadata(
+                title=sub.title,
+                description=sub.hook_text,
+            )
+            tt_res = await tt_publisher.publish_video(
+                video_path=sub.video_path,
+                metadata=tt_meta,
+                channel_id=sub.channel_id,
+                mock_mode=mock_mode,
+            )
+            if tt_res.success:
+                logger.info("✓ Approved and published submission %s to TikTok: %s", submission_id, tt_res.status)
+            else:
+                logger.warning("! Failed to publish submission %s to TikTok: %s", submission_id, tt_res.error)
 
         self._save()
         return sub

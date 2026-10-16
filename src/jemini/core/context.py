@@ -32,6 +32,11 @@ class ChannelProfile(BaseModel):
     constraints: list[str] = Field(default_factory=list)
     custom_settings: dict[str, Any] = Field(default_factory=dict)
 
+    @property
+    def tags(self) -> list[str]:
+        """Convenience accessor for default_tags."""
+        return self.default_tags
+
 
 class ChannelRegistry:
     """Registry of pre-configured and dynamic multi-channel profiles."""

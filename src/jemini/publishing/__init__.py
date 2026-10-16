@@ -1,5 +1,11 @@
-"""Publishing Module for Social Networks & Platforms."""
+"""Publishing Module for Social Networks & Platforms (YouTube Shorts & TikTok)."""
 
+from jemini.publishing.tiktok_publisher import (
+    PublishedTikTokResult,
+    TikTokMetadata,
+    TikTokPrivacyStatus,
+    TikTokPublisher,
+)
 from jemini.publishing.youtube_publisher import (
     PublishedVideoResult,
     PublishingPrivacyStatus,
@@ -8,8 +14,12 @@ from jemini.publishing.youtube_publisher import (
 )
 
 __all__ = [
+    "PublishedTikTokResult",
     "PublishedVideoResult",
     "PublishingPrivacyStatus",
+    "TikTokMetadata",
+    "TikTokPrivacyStatus",
+    "TikTokPublisher",
     "YouTubePublisher",
     "YouTubeShortMetadata",
 ]
