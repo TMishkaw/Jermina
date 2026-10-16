@@ -245,6 +245,22 @@ def load_knowledge_chunks() -> list[dict[str, Any]]:
         )
     })
 
+    # 13. Media Validation & Quality Control Loop
+    chunks.append({
+        "title": "Autonomous Media Validation Engine & Quality Control Loop",
+        "category": "context",
+        "tags": ["validation", "quality-control", "virtual-art-director", "correction-loop", "zero-human"],
+        "source": "docs/wiki/media_validation_engine.md",
+        "content": (
+            "Autonomous Media & Component Validation Engine (Virtual Art Director):\n"
+            "- Zero-Human-In-The-Loop: Continuous multimodal review of video, audio, and code components via Gemini Live before release.\n"
+            "- Intent Injection: Compares real payloads against blueprint objectives (duration, target emotion, Golden Acting Standard, hook retention).\n"
+            "- ValidationCard Output: Emits structured evaluation cards with overall_score, passed criteria, issues, and actionable recommendations.\n"
+            "- Autonomous Correction Loop: When status is NEEDS_CORRECTION, dynamically injects feedback into generator up to 3 automatic iterations.\n"
+            "- Root-Cause First: Persistent defects trigger architectural prompt or schema adjustments rather than blind retries."
+        )
+    })
+
     return chunks
 
 async def seed_memory():

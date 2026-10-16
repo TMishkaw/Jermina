@@ -91,12 +91,18 @@ class DevelopmentBrain:
             "   - Step 2 (Database Audit): Declarative schema parity, asyncio.Lock / concurrency protection, in-memory cooldown caching.\n"
             "   - Step 3 (Specialized Engines): Key rotator hot standby, per-model 429 isolation, seamless Live API session wrappers.\n"
             "   - Step 4 (RCA Compliance): 100% adherence to Root-Cause First without local quick-fix workarounds.\n"
-            "   - Step 5 (Docs & Memory Parity): Complete documentation and pgvector associative memory synchronization."
+            "   - Step 5 (Docs & Memory Parity): Complete documentation and pgvector associative memory synchronization.\n\n"
+            "10. AUTONOMOUS MEDIA VALIDATION & QUALITY CONTROL LOOP:\n"
+            "   - Zero-Human-In-The-Loop: Virtual Art Director via Gemini Live/Multimodal evaluating generated media vs intent.\n"
+            "   - Intent Injection: Every artifact is checked against expected duration, emotion, constraints, and hook retention.\n"
+            "   - Typed Validation Cards: Output strictly parsed into ValidationCard (overall_score, issues, recommendations).\n"
+            "   - Autonomous Correction Loop: NEEDS_CORRECTION triggers automatic self-correction prompts up to 3 iterations.\n"
+            "   - Root-Cause Resolution: Recurring validation failures demand systemic prompt/contract fixes rather than endless retries."
         )
         return ContextLayer(
             layer_type=ContextLayerType.DOMAIN,
             name="development_brain",
-            version="2.2.0",
+            version="2.3.0",
             content=content,
             metadata={"domain": "engineering_and_gemini_architecture"}
         )
