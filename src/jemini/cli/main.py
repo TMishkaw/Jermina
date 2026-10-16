@@ -17,7 +17,6 @@ from typing import Any
 from sqlalchemy import text
 
 from jemini.core.config import settings
-from jemini.core.context import ChannelProfile
 from jemini.orchestration.parallel_pipeline import ParallelMediaOrchestrator
 from jemini.rendering.remotion_renderer import RemotionRenderer, RenderOptions
 from jemini.rotator.rotator import APIKeyRotator
@@ -52,6 +51,7 @@ async def run_e2e_render(
     mock_mode: bool = False,
     skip_validation: bool = False,
     publish_youtube: bool = False,
+    channel_id: str = "stickman_lab",
     max_correction_attempts: int = 2,
 ) -> dict[str, Any]:
     """Executes the full autonomous pipeline with self-correction."""
@@ -59,18 +59,17 @@ async def run_e2e_render(
     out_dir.mkdir(parents=True, exist_ok=True)
     rotator = _init_rotator()
 
+    from jemini.core.context import ChannelRegistry
+
+    profile = ChannelRegistry.get(channel_id)
+
     logger.info("==================================================")
     logger.info("   JEMINI AUTONOMOUS VIDEO PRODUCTION PIPELINE   ")
+    logger.info("   Channel: %s (%s) | Voice: %s | Color: %s", profile.channel_name, profile.channel_id, profile.voice_name, profile.accent_color)
     logger.info("==================================================")
 
     # 1. Script Ingestion / Generation
     script_gen = ScriptGenerator(rotator=rotator)
-    profile = ChannelProfile(
-        channel_id="stickman_lab",
-        channel_name="Jemini Stickman Lab",
-        core_theme="AI coding, viral tech, and autonomous agents",
-        tone_of_voice="energetic, humorous, provocative",
-    )
 
     if script_path:
         path = Path(script_path)
@@ -118,6 +117,7 @@ async def run_e2e_render(
         audio_rms=pipeline_res.audio_rms_per_frame,
         subtitles=pipeline_res.unified_cues,
         output_mp4=video_output_path,
+        accent_color=profile.accent_color,
         options=render_opts,
     )
     logger.info("✓ Video rendering complete: %s", final_video)
@@ -135,7 +135,7 @@ async def run_e2e_render(
             title=short_script.title,
             target_type=ValidationTargetType.VIDEO,
             expected_duration_seconds=pipeline_res.total_duration_seconds,
-            target_emotion="energetic, humorous, provocative",
+            target_emotion=profile.tone_of_voice,
             key_points=["3-second hook", "clear subtitles", "stickman acting"],
         )
 
@@ -144,10 +144,10 @@ async def run_e2e_render(
             logger.info("Running Multimodal Quality Validation (Attempt %d/%d)...", attempt, max_correction_attempts)
             validation_card = await validator.validate(
                 intent=intent,
-                payload_summary=f"Stickman Short 9:16 on '{short_script.title}'",
+                payload_summary=f"Stickman Short 9:16 on '{short_script.title}' for channel '{profile.channel_name}'",
                 media_path=final_video,
                 iteration=attempt,
-                channel_id="stickman_lab",
+                channel_id=profile.channel_id,
                 mock_mode=mock_mode,
             )
             current_status = validation_card.status
@@ -298,6 +298,92 @@ async def run_test_readiness() -> bool:
     return all_passed
 
 
+def print_channels_table() -> None:
+    """Displays registered channel profiles and branding settings."""
+    from jemini.core.context import ChannelRegistry
+
+    channels = ChannelRegistry.list_channels()
+    print("\n" + "=" * 90)
+    print("                     JEMINI MULTI-CHANNEL PROFILES REGISTRY")
+    print("=" * 90)
+    print(f"{'CHANNEL ID':<18} | {'NAME':<24} | {'VOICE':<8} | {'ACCENT':<9} | {'THEME'}")
+    print("-" * 90)
+    for ch in channels:
+        print(f"{ch.channel_id:<18} | {ch.channel_name:<24} | {ch.voice_name:<8} | {ch.accent_color:<9} | {ch.core_theme[:30]}...")
+    print("=" * 90 + "\n")
+
+
+async def handle_scout(channel_id: str, count: int, enqueue: bool, mock_mode: bool) -> None:
+    """Scouts viral topics and optionally registers them in the production queue."""
+    from jemini.core.context import ChannelRegistry
+    from jemini.scheduling.queue import ProductionQueue
+    from jemini.scheduling.scout import TrendScout
+
+    profile = ChannelRegistry.get(channel_id)
+    rotator = _init_rotator()
+    scout = TrendScout(rotator=rotator)
+
+    logger.info("Scouting %d trending topics for '%s'...", count, profile.channel_name)
+    scouted = await scout.scout_topics(profile=profile, count=count, mock_mode=mock_mode)
+
+    print("\n" + "=" * 80)
+    print(f"       SCOUTED TRENDING TOPICS: {profile.channel_name.upper()}")
+    print("=" * 80)
+    queue = ProductionQueue() if enqueue else None
+
+    for idx, item in enumerate(scouted.topics, start=1):
+        print(f"[{idx}] {item.title}")
+        print(f"    Hook Angle:  {item.hook_angle}")
+        print(f"    Score:       {item.relevance_score}/10.0 | Emotion: {item.target_emotion}")
+        print(f"    Tags:        {', '.join(item.keywords)}")
+        if enqueue and queue:
+            task = queue.enqueue(channel_id=profile.channel_id, topic=item.title)
+            print(f"    -> Enqueued as {task.task_id} (Status: {task.status.value})")
+        print("-" * 80)
+    print()
+
+
+async def handle_queue(list_tasks: bool, process_next: bool, mock_mode: bool) -> None:
+    """Inspects or processes scheduled production tasks."""
+    from jemini.scheduling.queue import ProductionQueue
+
+    queue = ProductionQueue()
+
+    if process_next:
+        pending = queue.get_next_pending()
+        if not pending:
+            logger.info("No pending tasks in queue.")
+            return
+        logger.info("Processing queued task %s: '%s' for channel '%s'...", pending.task_id, pending.topic, pending.channel_id)
+        try:
+            res = await run_e2e_render(
+                topic=pending.topic,
+                channel_id=pending.channel_id,
+                mock_mode=mock_mode,
+            )
+            score = res.get("validation_card", {}).get("overall_score") if res.get("validation_card") else 9.0
+            queue.complete_task(task_id=pending.task_id, video_path=res["video_path"], validation_score=score)
+            logger.info("✓ Queued task %s successfully produced: %s", pending.task_id, res["video_path"])
+        except Exception as exc:  # noqa: BLE001
+            queue.fail_task(task_id=pending.task_id, error_message=str(exc))
+            logger.error("Failed to process queued task %s: %s", pending.task_id, exc)
+        return
+
+    # Default to listing tasks
+    tasks = queue.list_tasks()
+    print("\n" + "=" * 85)
+    print("                        JEMINI PRODUCTION QUEUE")
+    print("=" * 85)
+    if not tasks:
+        print("  Queue is empty. Use 'scout --enqueue' or add tasks manually.")
+    else:
+        print(f"{'TASK ID':<12} | {'CHANNEL':<16} | {'STATUS':<11} | {'TOPIC'}")
+        print("-" * 85)
+        for t in tasks:
+            print(f"{t.task_id:<12} | {t.channel_id:<16} | {t.status.value.upper():<11} | {t.topic[:40]}")
+    print("=" * 85 + "\n")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Jemini Autonomous Video Production CLI")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -305,11 +391,28 @@ def main():
     # Subcommand: render
     render_parser = subparsers.add_parser("render", help="Render autonomous video from topic or script")
     render_parser.add_argument("--topic", type=str, help="Topic for autonomous script generation")
+    render_parser.add_argument("--channel", type=str, default="stickman_lab", help="Channel profile ID (stickman_lab, cyber_matrix, crypto_pulse, science_genesis)")
     render_parser.add_argument("--script", type=str, help="Path to custom JSON script")
     render_parser.add_argument("--output-dir", type=str, default="output", help="Destination folder for artifacts")
     render_parser.add_argument("--mock-mode", action="store_true", help="Execute in offline mock mode")
     render_parser.add_argument("--skip-validation", action="store_true", help="Skip multimodal validation loop")
     render_parser.add_argument("--publish-youtube", action="store_true", help="Upload rendered video to YouTube Shorts")
+
+    # Subcommand: channels
+    subparsers.add_parser("channels", help="List registered multi-channel profiles and branding")
+
+    # Subcommand: scout
+    scout_parser = subparsers.add_parser("scout", help="Scout viral trending topics for a channel")
+    scout_parser.add_argument("--channel", type=str, default="stickman_lab", help="Target channel profile ID")
+    scout_parser.add_argument("--count", type=int, default=3, help="Number of topics to scout")
+    scout_parser.add_argument("--enqueue", action="store_true", help="Directly enqueue scouted topics for production")
+    scout_parser.add_argument("--mock-mode", action="store_true", help="Scout in offline mock mode")
+
+    # Subcommand: queue
+    queue_parser = subparsers.add_parser("queue", help="Manage production queue")
+    queue_parser.add_argument("--list", action="store_true", help="List tasks in queue")
+    queue_parser.add_argument("--process-next", action="store_true", help="Process and render next queued task")
+    queue_parser.add_argument("--mock-mode", action="store_true", help="Run queue processing in mock mode")
 
     # Subcommand: test-readiness
     subparsers.add_parser("test-readiness", help="Run pre-flight Matrix Readiness Suite for QA handoff")
@@ -320,11 +423,31 @@ def main():
         asyncio.run(
             run_e2e_render(
                 topic=args.topic,
+                channel_id=args.channel,
                 script_path=args.script,
                 output_dir=args.output_dir,
                 mock_mode=args.mock_mode,
                 skip_validation=args.skip_validation,
                 publish_youtube=args.publish_youtube,
+            )
+        )
+    elif args.command == "channels":
+        print_channels_table()
+    elif args.command == "scout":
+        asyncio.run(
+            handle_scout(
+                channel_id=args.channel,
+                count=args.count,
+                enqueue=args.enqueue,
+                mock_mode=args.mock_mode,
+            )
+        )
+    elif args.command == "queue":
+        asyncio.run(
+            handle_queue(
+                list_tasks=args.list,
+                process_next=args.process_next,
+                mock_mode=args.mock_mode,
             )
         )
     elif args.command == "test-readiness":

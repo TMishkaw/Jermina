@@ -91,6 +91,7 @@ class RemotionRenderer:
         audio_rms: list[float],
         subtitles: list[dict[str, Any]],
         output_mp4: Path | str,
+        accent_color: str = "#00F0FF",
         options: RenderOptions | None = None,
     ) -> Path:
         """Renders 9:16 short video with synced audio, subtitles, and stickman rig."""
@@ -113,7 +114,7 @@ class RemotionRenderer:
             "id": out_file.stem,
             "title": title,
             "hookText": hook_text,
-            "accentColor": "#00F0FF",
+            "accentColor": accent_color,
             "audioSrc": "voice_track.wav",
             "totalFrames": total_frames,
             "audioRms": audio_rms,

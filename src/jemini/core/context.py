@@ -7,7 +7,7 @@ Layers:
 """
 
 from enum import Enum
-from typing import Any
+from typing import Any, ClassVar
 
 from pydantic import BaseModel, Field
 
@@ -26,8 +26,76 @@ class ChannelProfile(BaseModel):
     tone_of_voice: str = "dynamic, captivating, authentic"
     niche_keywords: list[str] = Field(default_factory=list)
     video_language: str = "uk"
+    accent_color: str = "#00F0FF"
+    voice_name: str = "Zephyr"
+    default_tags: list[str] = Field(default_factory=list)
     constraints: list[str] = Field(default_factory=list)
     custom_settings: dict[str, Any] = Field(default_factory=dict)
+
+
+class ChannelRegistry:
+    """Registry of pre-configured and dynamic multi-channel profiles."""
+
+    _PROFILES: ClassVar[dict[str, ChannelProfile]] = {
+        "stickman_lab": ChannelProfile(
+            channel_id="stickman_lab",
+            channel_name="Jemini Stickman Lab",
+            core_theme="AI coding, viral tech, and autonomous agents",
+            tone_of_voice="energetic, humorous, provocative",
+            accent_color="#00F0FF",
+            voice_name="Zephyr",
+            niche_keywords=["AI", "Python", "Autonomous Agents", "Remotion", "Gemini 3.8"],
+            default_tags=["#AI", "#Coding", "#Jemini", "#TechShorts", "#Python", "#Shorts"],
+        ),
+        "cyber_matrix": ChannelProfile(
+            channel_id="cyber_matrix",
+            channel_name="Cyber Matrix Operations",
+            core_theme="Cybersecurity, terminal hacking, zero-day vulnerabilities, devops",
+            tone_of_voice="tactical, sinister, authoritative",
+            accent_color="#00FF66",
+            voice_name="Fenrir",
+            niche_keywords=["Cybersecurity", "ZeroDay", "Linux", "DevOps", "Ethical Hacking"],
+            default_tags=["#CyberSecurity", "#Hacking", "#DevOps", "#Terminal", "#Linux", "#Shorts"],
+        ),
+        "crypto_pulse": ChannelProfile(
+            channel_id="crypto_pulse",
+            channel_name="Crypto Pulse & Algo",
+            core_theme="Cryptocurrency, algorithmic trading, decentralized protocols",
+            tone_of_voice="fast-paced, analytical, urgent",
+            accent_color="#FFB800",
+            voice_name="Aoede",
+            niche_keywords=["Bitcoin", "Ethereum", "AlgoTrading", "Web3", "Smart Contracts"],
+            default_tags=["#Crypto", "#FinTech", "#AlgoTrading", "#Bitcoin", "#Trading", "#Shorts"],
+        ),
+        "science_genesis": ChannelProfile(
+            channel_id="science_genesis",
+            channel_name="Science Genesis",
+            core_theme="Quantum computing, synthetic biology, space exploration",
+            tone_of_voice="inspiring, wonder-filled, visionary",
+            accent_color="#9D00FF",
+            voice_name="Kore",
+            niche_keywords=["Quantum Computing", "SpaceX", "BioTech", "Physics", "Future"],
+            default_tags=["#Science", "#FutureTech", "#Quantum", "#Space", "#Innovation", "#Shorts"],
+        ),
+    }
+
+    @classmethod
+    def get(cls, channel_id: str) -> ChannelProfile:
+        """Retrieves channel profile or falls back to stickman_lab with warning."""
+        if channel_id in cls._PROFILES:
+            return cls._PROFILES[channel_id]
+        return cls._PROFILES["stickman_lab"]
+
+    @classmethod
+    def list_channels(cls) -> list[ChannelProfile]:
+        """Returns all registered channel profiles."""
+        return list(cls._PROFILES.values())
+
+    @classmethod
+    def register(cls, profile: ChannelProfile) -> None:
+        """Registers or overrides a channel profile."""
+        cls._PROFILES[profile.channel_id] = profile
+
 
 class ContextLayer(BaseModel):
     layer_type: ContextLayerType
