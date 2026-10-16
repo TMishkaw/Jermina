@@ -3,12 +3,11 @@ services:
     image: pgvector/pgvector:pg16
     container_name: jemini_postgres
     restart: unless-stopped
+    network_mode: host
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-jemini}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./scripts/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql:ro
