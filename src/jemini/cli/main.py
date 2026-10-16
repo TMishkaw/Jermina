@@ -662,6 +662,8 @@ async def handle_analyze_comments(
     batch_size: int,
     enqueue: bool,
     mock_mode: bool,
+    target_channel: str = "stickman_lab",
+    reanalyze: bool = False,
 ) -> None:
     """Performs batch semantic analysis of audience comments and enqueues viral hypotheses."""
     from jemini.analytics.comment_analyzer import AudienceSentimentAnalyzer
@@ -670,8 +672,10 @@ async def handle_analyze_comments(
     analyzer = AudienceSentimentAnalyzer(rotator=rotator, batch_size=batch_size)
     report = await analyzer.analyze_comments(
         channel_id=channel_id,
+        target_channel_id=target_channel,
         limit=limit if limit > 0 else 500,
         enqueue_hypotheses=enqueue,
+        reanalyze_all=reanalyze,
         mock_mode=mock_mode,
     )
     print("\n" + "=" * 80)
@@ -801,6 +805,8 @@ def main():
     comments_parser.add_argument("--limit", type=int, default=100, help="Maximum comments to analyze in this run")
     comments_parser.add_argument("--batch-size", type=int, default=25, help="Batch size for LLM evaluation")
     comments_parser.add_argument("--no-enqueue", action="store_true", help="Do not enqueue generated hypotheses into Production Queue")
+    comments_parser.add_argument("--reanalyze", action="store_true", help="Reanalyze all viewer comments")
+    comments_parser.add_argument("--target-channel", type=str, default="stickman_lab", help="Channel profile to enqueue hypotheses for")
     comments_parser.add_argument("--mock-mode", action="store_true", help="Run offline mock analysis without Gemini API")
 
     # Subcommand: youtube-verify
@@ -857,6 +863,8 @@ def main():
                 batch_size=args.batch_size,
                 enqueue=not args.no_enqueue,
                 mock_mode=args.mock_mode,
+                target_channel=args.target_channel,
+                reanalyze=args.reanalyze,
             )
         )
     elif args.command == "youtube-verify":

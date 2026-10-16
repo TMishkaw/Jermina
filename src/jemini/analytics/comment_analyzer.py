@@ -104,25 +104,33 @@ class AudienceSentimentAnalyzer:
     async def analyze_comments(
         self,
         channel_id: str = "UC1ol6l3KL3sgmLPiwQy2QTA",
+        target_channel_id: str = "stickman_lab",
         limit: int = 100,
         enqueue_hypotheses: bool = True,
+        reanalyze_all: bool = False,
         mock_mode: bool = False,
     ) -> AudienceSentimentReport:
         """Fetches pending comments from PostgreSQL, processes them in batches of 25, and updates DB."""
         logger.info("Fetching comments for sentiment analysis (channel: %s)...", channel_id)
 
-        # 1. Fetch unanalyzed viewer comments from DB
+        # 1. Fetch viewer comments from DB
         comments_to_analyze: list[dict[str, Any]] = []
         async with AsyncSessionLocal() as session:
-            stmt = (
-                select(YouTubeCommentRecord)
-                .where(
-                    YouTubeCommentRecord.sentiment.is_(None),
-                    YouTubeCommentRecord.author_name.notin_(["@Jermina_AI", "Jermina AI Studio"]),
-                )
-                .limit(limit)
+            stmt = select(YouTubeCommentRecord).where(
+                YouTubeCommentRecord.author_name.notin_(["@Jermina_AI", "Jermina AI Studio"]),
             )
+            if not reanalyze_all:
+                stmt = stmt.where(YouTubeCommentRecord.sentiment.is_(None))
+            
+            stmt = stmt.order_by(YouTubeCommentRecord.like_count.desc(), YouTubeCommentRecord.published_at.desc()).limit(limit)
             rows = (await session.execute(stmt)).scalars().all()
+
+            # If no unanalyzed found and reanalyze_all was False, fallback to top comments
+            if not rows and not reanalyze_all:
+                fallback_stmt = select(YouTubeCommentRecord).where(
+                    YouTubeCommentRecord.author_name.notin_(["@Jermina_AI", "Jermina AI Studio"]),
+                ).order_by(YouTubeCommentRecord.like_count.desc(), YouTubeCommentRecord.published_at.desc()).limit(limit)
+                rows = (await session.execute(fallback_stmt)).scalars().all()
 
             for r in rows:
                 clean_text = r.text.strip()
@@ -250,7 +258,7 @@ class AudienceSentimentAnalyzer:
             queue = ProductionQueue()
             for topic in unique_hypotheses:
                 task = queue.enqueue(
-                    channel_id="cyber_matrix",
+                    channel_id=target_channel_id,
                     topic=topic,
                     metadata={"source": "audience_sentiment_loop", "origin_channel": "@Jermina_AI"},
                 )
