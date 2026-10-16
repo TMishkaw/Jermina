@@ -27,6 +27,8 @@ export interface StickmanShortConfig {
   hookText: string;
   accentColor: string;
   audioSrc?: string;
+  totalFrames?: number;
+  audioRms?: number[];
   stickmanCues: StickmanCue[];
   subtitles: SubtitleCue[];
 }

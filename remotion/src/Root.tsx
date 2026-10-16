@@ -15,6 +15,12 @@ export const RemotionRoot: React.FC = () => {
         defaultProps={{
           config: defaultStickmanShortConfig,
         }}
+        calculateMetadata={({ props }) => {
+          const frames = (props as { config?: { totalFrames?: number } })?.config?.totalFrames;
+          return {
+            durationInFrames: frames && frames > 30 ? frames : 360,
+          };
+        }}
       />
     </>
   );

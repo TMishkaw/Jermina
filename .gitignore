@@ -62,5 +62,6 @@ keys.json
 node_modules/
 remotion/build/
 remotion/out/
+remotion/active_props.json
 out/
 
