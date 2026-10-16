@@ -932,6 +932,13 @@ def main():
     db_res_parser.add_argument("--input-dir", type=str, default="seeds/sanitized_db", help="Source folder with JSON seeds")
     db_res_parser.add_argument("--clear-existing", action="store_true", help="Clear existing records before restoring")
 
+    # Subcommand: studio-docs
+    docs_parser = subparsers.add_parser("studio-docs", help="Query and inspect Jemini Studio Knowledge Base & Architectural Standards")
+    docs_parser.add_argument("action", choices=["list", "search", "get", "sections"], help="Action to execute")
+    docs_parser.add_argument("--query", "-q", type=str, default="", help="Search query string")
+    docs_parser.add_argument("--section", "-s", type=str, default=None, help="Filter by section (DevDocs, LiveAPIDocs, etc.)")
+    docs_parser.add_argument("--doc", "-d", type=str, default=None, help="Document name to retrieve (e.g. StickmanKinematics)")
+
     args = parser.parse_args()
 
     if args.command == "render":
@@ -1073,6 +1080,38 @@ def main():
         print(f"✓ Database sanitized knowledge successfully restored from '{args.input_dir}':")
         for t, count in summary.items():
             print(f"  • {t}: {count} records")
+    elif args.command == "studio-docs":
+        from jemini.mcp.studio_docs import StudioDocsEngine
+
+        engine = StudioDocsEngine()
+        if args.action == "sections":
+            sections = engine.list_sections()
+            print("=== JEMINI STUDIO MCP DOCS SECTIONS ===")
+            for s in sections:
+                print(f"  📁 {s}")
+        elif args.action == "list":
+            docs = engine.list_documents(section=args.section)
+            print(f"=== JEMINI STUDIO DOCUMENTS ({len(docs)}) ===")
+            for d in docs:
+                print(f"  📄 [{d['section']}] {d['doc_name']} — {d['title']}")
+        elif args.action == "search":
+            results = engine.search_docs(query=args.query, section=args.section)
+            print(f"=== JEMINI STUDIO DOCS SEARCH: '{args.query}' ({len(results)} hits) ===")
+            for r in results:
+                print(f"\n  🎯 [{r.section}] {r.title} ({r.doc_name}) [Score: {r.relevance_score:.1f}]")
+                print(f"     {r.snippet}")
+        elif args.action == "get":
+            doc_id = args.doc or args.query
+            if not doc_id:
+                print("Error: Specify --doc <name> to retrieve document content.")
+                sys.exit(1)
+            content = engine.get_document(doc_id)
+            if content:
+                print(f"=== DOCUMENT: {doc_id} ===\n")
+                print(content)
+            else:
+                print(f"Error: Document '{doc_id}' not found in studio_knowledge.")
+                sys.exit(1)
 
 
 if __name__ == "__main__":
