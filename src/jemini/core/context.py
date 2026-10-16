@@ -74,12 +74,23 @@ class DevelopmentBrain:
             "   - Testing Pyramid: 100% pass on unit tests + fault injection for 429 and network failures.\n"
             "   - Graceful degradation and structured JSON logging in PostgreSQL.\n"
             "   - MCP servers: postgres-jemini (DB inspection) and github (autonomous PR/Issue workflows).\n"
-            "   - Custom Subagents: isolated Git worktrees ('branch' mode) in .agents/agents/."
+            "   - Custom Subagents: isolated Git worktrees ('branch' mode) in .agents/agents/.\n\n"
+            "7. DETERMINISM VS. FLEXIBILITY MATRIX (SOLID FOUNDATION - FLEXIBLE AGENTS):\n"
+            "   - Core & Engine (Strictly Deterministic): Git Flow, Key Rotator + 429 Hot Standby, PostgreSQL schemas, strict typing & ruff/pytest.\n"
+            "   - AI & Context Layers (Hybrid): Layered hierarchy invariant (Core -> Domain -> Channel); channel prompts and pgvector memory flexible.\n"
+            "   - Multimodal Streams (Adaptive with Rigid Triggers): Deterministic scenarios A/B/C and graceful degradation; flexible real-time visual parsing.\n"
+            "   - Self-Evolution (Bounded Exploration): Channel anchor niche is immutable; creative hypotheses and GitHub Issues generation autonomous.\n\n"
+            "8. ROOT-CAUSE FIRST (DEVELOPMENT RCA PROTOCOL):\n"
+            "   - Zero Quick-Fix Policy: Never use blind try-except pass or local workarounds that mask symptoms.\n"
+            "   - Step 1 (RCA): Analyze why the architecture, contract, or typing permitted the error.\n"
+            "   - Step 2 (Systemic Fix): Fix the architectural contract (Pydantic v2 model, interface, base class).\n"
+            "   - Step 3 (Defect Fix): Resolve the localized bug only after closing the systemic gap.\n"
+            "   - Step 4 (Regression Lock): Write a dedicated isolated pytest test reproducing the exact failure before merging to dev."
         )
         return ContextLayer(
             layer_type=ContextLayerType.DOMAIN,
             name="development_brain",
-            version="2.0.0",
+            version="2.1.0",
             content=content,
             metadata={"domain": "engineering_and_gemini_architecture"}
         )

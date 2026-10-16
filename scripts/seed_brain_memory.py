@@ -198,6 +198,37 @@ def load_knowledge_chunks() -> list[dict[str, Any]]:
         )
     })
 
+    # 10. Determinism vs Flexibility Matrix
+    chunks.append({
+        "title": "Determinism vs. Flexibility Matrix: Solid Foundation, Flexible Agents",
+        "category": "context",
+        "tags": ["architecture", "determinism", "flexibility", "core-engine", "evolution"],
+        "source": "docs/wiki/determinism_vs_flexibility_matrix.md",
+        "content": (
+            "Determinism vs Flexibility Matrix:\n"
+            "1. Core & Engine (Strictly Deterministic): Git Flow dev->test->release, Key Rotator 429 hot-standby, PostgreSQL schemas, strict typing & unit test coverage.\n"
+            "2. AI & Context Layers (Hybrid): Invariant layered hierarchy (Core -> Domain -> Channel); flexible channel prompts, tone of voice, and pgvector associative memory.\n"
+            "3. Multimodal Streams (Adaptive with Rigid Triggers): Deterministic Scenarios A/B/C and graceful degradation; flexible real-time stream interpretation.\n"
+            "4. Self-Evolution (Bounded Exploration): Channel anchor niche is immutable; creative hypotheses, styling experiments, and autonomous GitHub Issues generation."
+        )
+    })
+
+    # 11. Development RCA Protocol
+    chunks.append({
+        "title": "Development RCA Protocol & Root-Cause First Engineering Law",
+        "category": "context",
+        "tags": ["rca", "root-cause-first", "quality", "debugging", "regression-test"],
+        "source": "docs/guidelines/root_cause_analysis_protocol.md",
+        "content": (
+            "Development RCA Protocol (Root-Cause First):\n"
+            "- Any error or test failure MUST NOT be fixed with local quick-fixes, blind try-except pass, or empty fallbacks.\n"
+            "- Step 1 (RCA): Analyze why the architecture, typing, or schema permitted the failure.\n"
+            "- Step 2 (Systemic Fix): Fix the architectural contract (Pydantic v2 model, interface, base class, or validation).\n"
+            "- Step 3 (Defect Fix): Eliminate the localized bug only after closing the systemic vulnerability.\n"
+            "- Step 4 (Regression Lock): Write an isolated pytest unit test reproducing the exact failure before merging to dev branch."
+        )
+    })
+
     return chunks
 
 async def seed_memory():
