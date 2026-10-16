@@ -232,55 +232,23 @@ class SemanticActor:
         cls,
         total_frames: int,
         subtitles: list[dict[str, Any]] | None = None,
+        target_count_range: tuple[int, int] = (5, 10),
     ) -> list[dict[str, Any]]:
-        """Transforms subtitles into a continuous, frame-accurate kinematic acting cue timeline."""
+        """Generates 5 to 10 deliberate, well-paced semantic acting cues tailored to spoken subtitles."""
+        min_cues, max_cues = target_count_range
         cues: list[dict[str, Any]] = []
 
-        if subtitles:
-            current_cursor = 0
-            for idx, sub in enumerate(subtitles):
-                s_start = int(sub.get("startFrame", current_cursor))
-                s_end = int(sub.get("endFrame", s_start + 60))
-                s_text = str(sub.get("text", ""))
-
-                # Fill any pause/gap before this subtitle
-                if s_start > current_cursor:
-                    gap_dur = s_start - current_cursor
-                    acting = cls.classify_phrase("", idx)
-                    cues.append({
-                        "fromFrame": current_cursor,
-                        "durationInFrames": gap_dur,
-                        "animation": acting.animation,
-                        "eyeType": acting.eye_type,
-                        "mouthType": acting.mouth_type,
-                        "prop": acting.prop,
-                        "emoji": acting.emoji,
-                        "customPose": acting.custom_pose,
-                    })
-                    current_cursor = s_start
-
-                # Add semantic cue for the spoken subtitle
-                sub_dur = max(s_end - s_start, 30)
-                acting = cls.classify_phrase(s_text, idx)
+        if not subtitles:
+            raw_beats = round(total_frames / 140) if total_frames > 0 else 6
+            num_beats = max(min_cues, min(max_cues, raw_beats))
+            step = total_frames / num_beats
+            for i in range(num_beats):
+                b_start = int(round(i * step))
+                b_end = int(round((i + 1) * step)) if i < num_beats - 1 else total_frames
+                acting = cls.classify_phrase("", fallback_idx=i)
                 cues.append({
-                    "fromFrame": s_start,
-                    "durationInFrames": sub_dur,
-                    "animation": acting.animation,
-                    "eyeType": acting.eye_type,
-                    "mouthType": acting.mouth_type,
-                    "prop": acting.prop,
-                    "emoji": acting.emoji,
-                    "customPose": acting.custom_pose,
-                })
-                current_cursor = s_start + sub_dur
-
-            # Fill remaining frames if audio continues past last subtitle
-            if current_cursor < total_frames:
-                rem_dur = total_frames - current_cursor
-                acting = cls.classify_phrase("підпишись на канал", len(subtitles))
-                cues.append({
-                    "fromFrame": current_cursor,
-                    "durationInFrames": rem_dur,
+                    "fromFrame": b_start,
+                    "durationInFrames": max(b_end - b_start, 30),
                     "animation": acting.animation,
                     "eyeType": acting.eye_type,
                     "mouthType": acting.mouth_type,
@@ -290,16 +258,74 @@ class SemanticActor:
                 })
             return cues
 
-        # Default rotation if no subtitles provided
-        current_frame = 0
-        step_duration = 60
-        idx = 0
-        while current_frame < total_frames:
-            dur = min(step_duration, total_frames - current_frame)
-            acting = cls.classify_phrase("", idx)
+        # Determine target number of beats
+        if total_frames >= min_cues * 90:
+            ideal_beats = max(min_cues, min(max_cues, round(total_frames / 140)))
+        else:
+            ideal_beats = max(1, min(max_cues, round(total_frames / 90)))
+
+        m = len(subtitles)
+        if m >= ideal_beats:
+            buckets: list[list[dict[str, Any]]] = []
+            for i in range(ideal_beats):
+                start_idx = int(round(i * m / ideal_beats))
+                end_idx = int(round((i + 1) * m / ideal_beats))
+                if start_idx < end_idx:
+                    buckets.append(subtitles[start_idx:end_idx])
+        else:
+            working_chunks = [
+                {
+                    "text": s.get("text", ""),
+                    "startFrame": int(s.get("startFrame", 0)),
+                    "endFrame": int(s.get("endFrame", 0)),
+                }
+                for s in subtitles
+            ]
+            while len(working_chunks) < ideal_beats:
+                longest_idx = max(
+                    range(len(working_chunks)),
+                    key=lambda idx: working_chunks[idx]["endFrame"] - working_chunks[idx]["startFrame"],
+                )
+                c = working_chunks[longest_idx]
+                dur = c["endFrame"] - c["startFrame"]
+                if dur <= 45:
+                    break
+                mid = c["startFrame"] + dur // 2
+                c1 = {"text": c["text"], "startFrame": c["startFrame"], "endFrame": mid}
+                c2 = {"text": c["text"], "startFrame": mid, "endFrame": c["endFrame"]}
+                working_chunks[longest_idx : longest_idx + 1] = [c1, c2]
+
+            buckets = [[c] for c in working_chunks]
+
+        current_cursor = 0
+        prev_anim = None
+        for i, bucket in enumerate(buckets):
+            b_start = current_cursor
+            raw_end = int(bucket[-1].get("endFrame", b_start + 60))
+            b_end = max(b_start + 30, raw_end)
+            if i == len(buckets) - 1:
+                b_end = max(b_end, total_frames)
+            b_dur = b_end - b_start
+
+            bucket_text = " ".join(str(s.get("text", "")) for s in bucket).strip()
+            acting = cls.classify_phrase(bucket_text, fallback_idx=i)
+
+            if acting.animation == prev_anim and prev_anim in ("talk", "idle", "laugh", "celebrate"):
+                alternatives = ["explain", "point_up", "shrug", "talk"]
+                alt_anim = [a for a in alternatives if a != prev_anim][i % 3]
+                acting = SemanticActingCue(
+                    animation=alt_anim,
+                    eye_type=acting.eye_type,
+                    mouth_type=acting.mouth_type,
+                    prop=acting.prop if alt_anim == "talk" else "none",
+                    emoji=acting.emoji,
+                    custom_pose=acting.custom_pose,
+                )
+
+            prev_anim = acting.animation
             cues.append({
-                "fromFrame": current_frame,
-                "durationInFrames": dur,
+                "fromFrame": b_start,
+                "durationInFrames": b_dur,
                 "animation": acting.animation,
                 "eyeType": acting.eye_type,
                 "mouthType": acting.mouth_type,
@@ -307,7 +333,95 @@ class SemanticActor:
                 "emoji": acting.emoji,
                 "customPose": acting.custom_pose,
             })
-            current_frame += dur
-            idx += 1
+            current_cursor = b_start + b_dur
+
+        if current_cursor < total_frames:
+            acting = cls.classify_phrase("підписуйся на канал", fallback_idx=len(cues))
+            cues.append({
+                "fromFrame": current_cursor,
+                "durationInFrames": total_frames - current_cursor,
+                "animation": acting.animation,
+                "eyeType": acting.eye_type,
+                "mouthType": acting.mouth_type,
+                "prop": acting.prop,
+                "emoji": acting.emoji,
+                "customPose": acting.custom_pose,
+            })
 
         return cues
+
+    @classmethod
+    async def generate_cues_with_ab_evolution(
+        cls,
+        total_frames: int,
+        subtitles: list[dict[str, Any]] | None = None,
+        motion_library: Any | None = None,
+        ab_tester: Any | None = None,
+        target_count_range: tuple[int, int] = (5, 10),
+        mock_mode: bool = False,
+    ) -> list[dict[str, Any]]:
+        """Generates 5-10 cues with autonomous A/B evolution (2-consecutive-wins) for missing presets."""
+        import logging
+        logger = logging.getLogger(__name__)
+
+        base_cues = cls.generate_cues_for_subtitles(
+            total_frames=total_frames,
+            subtitles=subtitles,
+            target_count_range=target_count_range,
+        )
+
+        if not subtitles or not ab_tester or not motion_library:
+            return base_cues
+
+        for i, cue in enumerate(base_cues):
+            b_start = cue["fromFrame"]
+            b_end = b_start + cue["durationInFrames"]
+            overlapping = [
+                str(s.get("text", "")).strip()
+                for s in subtitles
+                if int(s.get("endFrame", 0)) > b_start and int(s.get("startFrame", 0)) < b_end
+            ]
+            beat_text = " ".join(overlapping).strip()
+
+            if not beat_text:
+                continue
+
+            # Check if this text has a strong semantic ontology keyword match
+            has_direct_match = any(
+                any(kw in beat_text.lower() for kw in kws if kw != "?")
+                for kws, _, _, _, _, _ in SEMANTIC_ONTOLOGY
+            )
+
+            # If no direct ontology match, check motion library or trigger A/B evolution
+            if not has_direct_match:
+                try:
+                    existing_motion = await motion_library.find_motion_for_phrase(beat_text)
+                    if existing_motion:
+                        cue["animation"] = existing_motion.animation
+                        cue["eyeType"] = existing_motion.eye_type
+                        cue["mouthType"] = existing_motion.mouth_type
+                        cue["prop"] = existing_motion.prop
+                        cue["emoji"] = existing_motion.emoji
+                        cue["customPose"] = existing_motion.custom_pose
+                    else:
+                        elem_name = f"gesture_beat_{i+1}"
+                        intent = f"Виразний жест для теми: '{beat_text[:60]}'"
+                        logger.info("⚡ Missing preset for beat %d ('%s'). Running A/B convergence...", i + 1, beat_text[:40])
+                        ab_res = await ab_tester.run_ab_test(
+                            element_name=elem_name,
+                            intent_description=intent,
+                            required_consecutive_wins=2,
+                            mock_mode=mock_mode,
+                        )
+                        evolved_motion = await motion_library.register_ab_winner(ab_res)
+                        cue["animation"] = evolved_motion.animation
+                        cue["eyeType"] = evolved_motion.eye_type
+                        cue["mouthType"] = evolved_motion.mouth_type
+                        cue["prop"] = evolved_motion.prop
+                        cue["emoji"] = evolved_motion.emoji
+                        cue["customPose"] = evolved_motion.custom_pose
+                        logger.info("✓ Evolved and applied new preset '%s' to beat %d", evolved_motion.motion_id, i + 1)
+                except Exception as exc:  # noqa: BLE001
+                    logger.warning("Could not execute A/B evolution for beat %d: %s", i + 1, exc)
+
+        return base_cues

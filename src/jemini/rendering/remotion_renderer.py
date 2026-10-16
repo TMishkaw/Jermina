@@ -98,7 +98,23 @@ class RemotionRenderer:
             shutil.copyfile(audio_src, public_audio)
 
         total_frames = len(audio_rms) if audio_rms else 360
-        stickman_cues = self.generate_stickman_cues(total_frames, subtitles=subtitles)
+        try:
+            from jemini.rendering.motion_library import MotionLibraryManager
+            from jemini.validation.ab_testing import MovementABTester
+
+            motion_mgr = MotionLibraryManager()
+            tester = MovementABTester()
+            stickman_cues = await SemanticActor.generate_cues_with_ab_evolution(
+                total_frames=total_frames,
+                subtitles=subtitles,
+                motion_library=motion_mgr,
+                ab_tester=tester,
+                target_count_range=(5, 10),
+                mock_mode=opts.dry_run,
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("A/B evolution fallback to standard 5-10 cues: %s", exc)
+            stickman_cues = self.generate_stickman_cues(total_frames, subtitles=subtitles)
 
         # Build props payload
         config_payload = {

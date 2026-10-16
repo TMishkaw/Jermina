@@ -1,5 +1,7 @@
 """Tests for Stickman Semantic Acting and Floating Emoji Generation."""
 
+import pytest
+
 from jemini.rendering.remotion_renderer import RemotionRenderer
 
 
@@ -101,3 +103,57 @@ def test_generate_stickman_cues_with_subtitles():
 
     # Cue 3: CTA
     assert cues[2]["emoji"] in ("👇", "🔔", "👍")
+
+
+def test_generate_cues_strict_5_to_10_bounds():
+    """Verifies that regardless of how many micro-subtitles exist, cues are bounded between 5 and 10."""
+    from jemini.rendering.semantic_actor import SemanticActor
+
+    # Simulate 50 small subtitle chunks over 900 frames (30s Short)
+    subtitles = [
+        {"text": f"Слово номер {i} у реченні про технології", "startFrame": i * 18, "endFrame": (i + 1) * 18}
+        for i in range(50)
+    ]
+    cues = SemanticActor.generate_cues_for_subtitles(
+        total_frames=900,
+        subtitles=subtitles,
+        target_count_range=(5, 10),
+    )
+
+    assert 5 <= len(cues) <= 10
+    # Verify continuous coverage
+    assert cues[0]["fromFrame"] == 0
+    assert cues[-1]["fromFrame"] + cues[-1]["durationInFrames"] == 900
+
+
+@pytest.mark.asyncio
+async def test_generate_cues_with_ab_evolution(tmp_path):
+    """Verifies autonomous A/B evolution for beats with uncovered topics."""
+    from jemini.rendering.motion_library import MotionLibraryManager
+    from jemini.rendering.semantic_actor import SemanticActor
+    from jemini.validation.ab_testing import MovementABTester
+
+    cache_file = tmp_path / "motions.json"
+    remotion_cache = tmp_path / "public_motions.json"
+    motion_mgr = MotionLibraryManager(cache_path=cache_file, remotion_public_cache=remotion_cache)
+    ab_tester = MovementABTester()
+
+    # Subtitles with an uncovered topic
+    subtitles = [
+        {"text": "Чи може ШІ відчувати любов?", "startFrame": 0, "endFrame": 150},
+        {"text": "Гігантські підводні піраміди на глибині десяти тисяч метрів", "startFrame": 150, "endFrame": 450},
+        {"text": "Підписуйся на канал Jermina!", "startFrame": 450, "endFrame": 750},
+    ]
+
+    cues = await SemanticActor.generate_cues_with_ab_evolution(
+        total_frames=750,
+        subtitles=subtitles,
+        motion_library=motion_mgr,
+        ab_tester=ab_tester,
+        target_count_range=(5, 10),
+        mock_mode=True,
+    )
+
+    assert 5 <= len(cues) <= 10
+    assert cues[0]["animation"] == "heart_hands"
+
