@@ -2,6 +2,7 @@ import React from "react";
 import { Composition } from "remotion";
 import { StickmanShort9x16, defaultStickmanShortConfig } from "./compositions/StickmanShort9x16";
 import { CyberStudio16x9, defaultCyberStudio16x9Config } from "./compositions/CyberStudio16x9";
+import { IsolatedMotionCanvas, defaultIsolatedMotionCanvasConfig } from "./compositions/IsolatedMotionCanvas";
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -40,6 +41,25 @@ export const RemotionRoot: React.FC = () => {
           const frames = (props as { config?: { totalFrames?: number } })?.config?.totalFrames;
           return {
             durationInFrames: frames && frames > 30 ? frames : 360,
+          };
+        }}
+      />
+
+      {/* 3. Isolated Motion Canvas for Live API Kinematic Auditing & A/B Testing (1080x1920) */}
+      <Composition
+        id="IsolatedMotionCanvas"
+        component={IsolatedMotionCanvas}
+        durationInFrames={60}
+        fps={30}
+        width={1080}
+        height={1920}
+        defaultProps={{
+          config: defaultIsolatedMotionCanvasConfig,
+        }}
+        calculateMetadata={({ props }) => {
+          const frames = (props as { config?: { totalFrames?: number } })?.config?.totalFrames;
+          return {
+            durationInFrames: frames && frames > 15 ? frames : 60,
           };
         }}
       />

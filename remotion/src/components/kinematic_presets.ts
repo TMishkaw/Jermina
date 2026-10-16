@@ -283,10 +283,10 @@ export function getPoseForFrame(
         torsoAngle: 5.5, // lean toward camera
         headTilt: 2 + nod,
         spineCurvature: 3.5,
-        leftShoulderAngle: 22, // hand confidently placed on hip
-        leftElbowAngle: 105,
-        rightShoulderAngle: -68 + pulse, // arm aimed straight at viewer
-        rightElbowAngle: 4,
+        leftShoulderAngle: -24, // hand confidently placed on left hip
+        leftElbowAngle: 110,
+        rightShoulderAngle: -65 + pulse, // arm aimed straight at viewer
+        rightElbowAngle: 6,
         leftHipAngle: -8,
         leftKneeAngle: 10,
         rightHipAngle: 12,
@@ -325,10 +325,10 @@ export function getPoseForFrame(
         torsoAngle: -7 + tension, // recoil backwards
         headTilt: -2,
         spineCurvature: -5,
-        leftShoulderAngle: -75, // both hands thrust forward
-        leftElbowAngle: 12,
-        rightShoulderAngle: -80,
-        rightElbowAngle: 10,
+        leftShoulderAngle: -75, // both hands thrust forward symmetrically
+        leftElbowAngle: 15,
+        rightShoulderAngle: 75,
+        rightElbowAngle: -15,
         leftHipAngle: -14, // wide braced stance
         leftKneeAngle: 18,
         rightHipAngle: 14,
@@ -338,7 +338,7 @@ export function getPoseForFrame(
     }
 
     case "heart_hands": {
-      // Both arms arch above head to sculpt a pulsating heart
+      // Both arms arch symmetrically above head to sculpt a pulsating heart
       const heartbeat = Math.abs(Math.sin(time * 2.5 * twoPi)) * 6;
       const pulseArm = Math.sin(time * 2.5 * twoPi) * 3;
       return {
@@ -347,10 +347,10 @@ export function getPoseForFrame(
         torsoAngle: 0,
         headTilt: -4, // loving upward gaze
         spineCurvature: 0,
-        leftShoulderAngle: -135 + pulseArm,
-        leftElbowAngle: 80,
-        rightShoulderAngle: -135 - pulseArm,
-        rightElbowAngle: 80,
+        leftShoulderAngle: -145 + pulseArm,
+        leftElbowAngle: -70,
+        rightShoulderAngle: 145 - pulseArm,
+        rightElbowAngle: 70,
         leftHipAngle: -6,
         leftKneeAngle: 6,
         rightHipAngle: 6,
@@ -388,10 +388,10 @@ export function getPoseForFrame(
         rootXOffset: 0,
         torsoAngle: 0,
         headTilt: 12 + shrugCycle * 3, // curious head tilt
-        leftShoulderAngle: -45 + shrugCycle * 6,
+        leftShoulderAngle: -55 + shrugCycle * 6,
         leftElbowAngle: 90,
-        rightShoulderAngle: -45 - shrugCycle * 6,
-        rightElbowAngle: 90,
+        rightShoulderAngle: 55 - shrugCycle * 6,
+        rightElbowAngle: -90,
         leftHipAngle: -4,
         leftKneeAngle: 4,
         rightHipAngle: 4,
@@ -409,10 +409,10 @@ export function getPoseForFrame(
         rootXOffset: Math.sin(time * 0.5 * twoPi) * 2,
         torsoAngle: Math.sin(time * 0.8 * twoPi) * 2,
         headTilt: Math.sin(time * 1.4 * twoPi) * 3,
-        leftShoulderAngle: -30 + waveL,
-        leftElbowAngle: 50 + waveL * 0.5,
-        rightShoulderAngle: -35 + waveR,
-        rightElbowAngle: 50 + waveR * 0.5,
+        leftShoulderAngle: -34 + waveL,
+        leftElbowAngle: 45 + waveL * 0.4,
+        rightShoulderAngle: 34 + waveR,
+        rightElbowAngle: -45 - waveR * 0.4,
         leftHipAngle: -2,
         leftKneeAngle: 3,
         rightHipAngle: 3,
@@ -459,10 +459,10 @@ export function getPoseForFrame(
         rootXOffset: 0,
         torsoAngle: -5,
         headTilt: -5,
-        leftShoulderAngle: armAngle,
+        leftShoulderAngle: armAngle < 0 ? armAngle : -armAngle,
         leftElbowAngle: 15,
-        rightShoulderAngle: armAngle,
-        rightElbowAngle: 15,
+        rightShoulderAngle: armAngle < 0 ? -armAngle : armAngle,
+        rightElbowAngle: -15,
         leftHipAngle: knee * 0.5,
         leftKneeAngle: knee,
         rightHipAngle: knee * 0.5,
@@ -524,8 +524,8 @@ export function getPoseForFrame(
         headTilt: -6 + Math.sin(time * 3 * twoPi) * 4,
         leftShoulderAngle: -100 + jitter * 2,
         leftElbowAngle: 85,
-        rightShoulderAngle: -100 - jitter * 2,
-        rightElbowAngle: 85,
+        rightShoulderAngle: 100 - jitter * 2,
+        rightElbowAngle: -85,
         leftHipAngle: -8,
         leftKneeAngle: 14,
         rightHipAngle: 8,
@@ -546,8 +546,8 @@ export function getPoseForFrame(
         headTilt: -4 + headNod,
         leftShoulderAngle: -20 + armJiggle * 0.5,
         leftElbowAngle: 35,
-        rightShoulderAngle: -45 + armJiggle,
-        rightElbowAngle: 60,
+        rightShoulderAngle: 45 + armJiggle,
+        rightElbowAngle: -60,
         leftHipAngle: -4,
         leftKneeAngle: 6,
         rightHipAngle: 6,
@@ -568,8 +568,8 @@ export function getPoseForFrame(
         headTilt: -8, // looking up excitedly
         leftShoulderAngle: -130 + cheerWave,
         leftElbowAngle: 20,
-        rightShoulderAngle: -130 - cheerWave,
-        rightElbowAngle: 20,
+        rightShoulderAngle: 130 - cheerWave,
+        rightElbowAngle: -20,
         leftHipAngle: -8,
         leftKneeAngle: 8,
         rightHipAngle: 8,
@@ -587,10 +587,10 @@ export function getPoseForFrame(
         rootXOffset: gentleSway,
         torsoAngle: Math.sin(time * 0.5 * twoPi) * 1.5,
         headTilt: Math.sin(time * 0.7 * twoPi) * 3,
-        leftShoulderAngle: -8 + Math.sin(time * 0.9 * twoPi) * 4,
-        leftElbowAngle: 15,
-        rightShoulderAngle: -8 - Math.sin(time * 0.9 * twoPi) * 4,
-        rightElbowAngle: 15,
+        leftShoulderAngle: -10 + Math.sin(time * 0.9 * twoPi) * 3,
+        leftElbowAngle: 12,
+        rightShoulderAngle: 10 - Math.sin(time * 0.9 * twoPi) * 3,
+        rightElbowAngle: -12,
         leftHipAngle: -2,
         leftKneeAngle: 3,
         rightHipAngle: 2,
