@@ -31,7 +31,9 @@ class VoiceArchetype(str, Enum):
 
 
 class VoiceDirective(BaseModel):
-    archetype: VoiceArchetype = VoiceArchetype.ZEPHYR
+    archetype: VoiceArchetype = VoiceArchetype.AOEDE
+    gender: str = "female"
+    character_name: str = "Джерміна"
     emotion: str = "dynamic, captivating"
     vocal_fry: bool = False
     laughter_intensity: int = Field(default=5, ge=0, le=10)
@@ -77,14 +79,21 @@ class GeminiLiveVoiceService:
             "передавай це через живі смішки у словах, пирхання ('Пфф!..'), зітхання та збите дихання. "
         )
 
+        gender_desc = (
+            f"Твій персонаж — {directive.character_name} (дівчина, жіночий рід)."
+            if directive.gender == "female"
+            else f"Твій персонаж — {directive.character_name} (чоловічий рід)."
+        )
+
         return (
             "Ти — елітний актор озвучення студії Jemini. "
-            f"Твій тембр і персона: {directive.archetype.value}. Емоційний стан: {directive.emotion}.\n"
+            f"Твій тембр і персона: {directive.archetype.value}. {gender_desc} Емоційний стан: {directive.emotion}.\n"
             f"{fry_instruction}{whisper_instruction}{laughter_note}\n"
             "ПРАВИЛА ОЗВУЧЕННЯ:\n"
             "1. Промов наданий текст дослівно як живий персонаж у кадрі, від початку до кінця.\n"
             "2. Не коментуй, не вітайся додатково, не виходь з ролі.\n"
-            "3. Ремарки в дужках [зітхає], <сміх>, (пауза) — це режисерські вказівки: виконуй їх інтонаційно та диханням, а не читай вголос!"
+            "3. Ремарки в дужках [зітхає], <сміх>, (пауза) — це режисерські вказівки: виконуй їх інтонаційно та диханням, а не читай вголос!\n"
+            "4. Дотримуйся правильного граматичного роду та природної інтонації мовлення."
         )
 
     def _calculate_rms_energy(self, pcm_bytes: bytes, fps: int = 30, sample_rate: int = 24000) -> list[float]:
