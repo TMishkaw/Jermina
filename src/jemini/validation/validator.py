@@ -181,3 +181,38 @@ class MediaValidationEngine:
 
         logger.error("Quality loop exceeded %d iterations without reaching PASSED.", max_iterations)
         return card, last_artifact
+
+    async def validate_video_live_stream(
+        self,
+        intent: ValidationIntent,
+        video_path: Path | str,
+        channel_id: str = "system",
+        mock_mode: bool = False,
+    ) -> tuple[ValidationCard, Any]:
+        """Performs real-time multimodal evaluation of video and audio streams via Gemini 3.8 Live API."""
+        from jemini.validation.live_reviewer import LiveVideoReviewer
+
+        reviewer = LiveVideoReviewer(rotator=self.rotator)
+        live_result = await reviewer.review_video(
+            video_path=video_path,
+            intent=intent,
+            channel_id=channel_id,
+            mock_mode=mock_mode,
+        )
+
+        card = ValidationCard(
+            target_type=intent.target_type,
+            status=live_result.status,
+            overall_score=live_result.overall_score,
+            passed_criteria=[
+                f"Хук: {live_result.hook_evaluation[:80]}",
+                f"Озвучка: {live_result.voice_acting_evaluation[:80]}",
+            ],
+            detected_issues=[live_result.intent_discrepancies] if live_result.status != ValidationStatus.PASSED else [],
+            actionable_recommendations=live_result.actionable_improvements,
+            suggested_correction_prompt="; ".join(live_result.actionable_improvements) if live_result.actionable_improvements else None,
+            iteration=1,
+            media_path=str(video_path),
+        )
+        return card, live_result
+

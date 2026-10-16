@@ -56,10 +56,12 @@ async def run_e2e_render(
     channel_id: str = "stickman_lab",
     aspect_ratio: str = "9:16",
     max_correction_attempts: int = 2,
+    use_live_review: bool = False,
 ) -> dict[str, Any]:
     """Executes the full autonomous pipeline with self-correction."""
     out_dir = Path(output_dir).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
+
     rotator = _init_rotator()
 
     from jemini.core.context import ChannelRegistry
@@ -152,29 +154,45 @@ async def run_e2e_render(
             key_points=["3-second hook", "clear subtitles", "visual acting"],
         )
 
-        while attempt < max_correction_attempts and current_status == ValidationStatus.NEEDS_CORRECTION:
-            attempt += 1
-            logger.info("Running Multimodal Quality Validation (Attempt %d/%d)...", attempt, max_correction_attempts)
-            validation_card = await validator.validate(
+        if use_live_review:
+            logger.info("Executing Real-Time Multimodal Video & Audio Review via Gemini 3.8 Live API...")
+            validation_card, live_res = await validator.validate_video_live_stream(
                 intent=intent,
-                payload_summary=f"Video ({aspect_ratio}) on '{short_script.title}' for channel '{profile.channel_name}'",
-                media_path=final_video,
-                iteration=attempt,
+                video_path=final_video,
                 channel_id=profile.channel_id,
                 mock_mode=mock_mode,
             )
             current_status = validation_card.status
             logger.info(
-                "Validation score: %.1f/10.0 (Status: %s)",
+                "✓ Live Stream Review complete: Score %.1f/10.0 | Hook: %s",
                 validation_card.overall_score,
-                validation_card.status.value,
+                live_res.hook_evaluation[:60],
             )
+        else:
+            while attempt < max_correction_attempts and current_status == ValidationStatus.NEEDS_CORRECTION:
+                attempt += 1
+                logger.info("Running Multimodal Quality Validation (Attempt %d/%d)...", attempt, max_correction_attempts)
+                validation_card = await validator.validate(
+                    intent=intent,
+                    payload_summary=f"Video ({aspect_ratio}) on '{short_script.title}' for channel '{profile.channel_name}'",
+                    media_path=final_video,
+                    iteration=attempt,
+                    channel_id=profile.channel_id,
+                    mock_mode=mock_mode,
+                )
+                current_status = validation_card.status
+                logger.info(
+                    "Validation score: %.1f/10.0 (Status: %s)",
+                    validation_card.overall_score,
+                    validation_card.status.value,
+                )
 
-            if current_status == ValidationStatus.PASSED:
-                break
+                if current_status == ValidationStatus.PASSED:
+                    break
 
-            if attempt < max_correction_attempts:
-                logger.warning("Validation flagged issues: %s. Initiating autonomous correction...", validation_card.issues)
+                if attempt < max_correction_attempts:
+                    logger.warning("Validation flagged issues: %s. Initiating autonomous correction...", validation_card.detected_issues)
+
 
         if current_status != ValidationStatus.PASSED:
             logger.warning("Video flagged with [NEEDS_REVIEW]: score is below optimal threshold.")
@@ -539,6 +557,65 @@ async def handle_operator(
     print("=" * 95 + "\n")
 
 
+async def handle_review_live(
+    video_path: str,
+    intent_title: str,
+    channel_id: str,
+    mock_mode: bool = False,
+) -> None:
+    """Executes real-time multimodal live review of video file via Gemini 3.8 Live API."""
+    from jemini.validation.live_reviewer import LiveVideoReviewer
+    from jemini.validation.models import ValidationIntent, ValidationTargetType
+
+    v_path = Path(video_path).resolve()
+    if not v_path.exists():
+        logger.error("Video file does not exist: %s", v_path)
+        sys.exit(1)
+
+    rotator = _init_rotator()
+    reviewer = LiveVideoReviewer(rotator=rotator)
+
+    intent = ValidationIntent(
+        title=intent_title,
+        target_type=ValidationTargetType.VIDEO,
+        key_points=["3-second hook", "dynamic editing", "Golden Acting Standard voice"],
+    )
+
+    print("\n" + "=" * 80)
+    print("  GEMINI 3.8 LIVE STREAM MULTIMODAL VIDEO REVIEW")
+    print("=" * 80)
+    print(f"  Target Video: {v_path.name}")
+    print(f"  Path:         {v_path}")
+    print(f"  Intent:       {intent_title}")
+    print(f"  Channel:      {channel_id}")
+    print(f"  Mock Mode:    {mock_mode}")
+    print("=" * 80 + "\n")
+
+    result = await reviewer.review_video(
+        video_path=v_path,
+        intent=intent,
+        channel_id=channel_id,
+        mock_mode=mock_mode,
+    )
+
+    print("\n" + "=" * 80)
+    print("  LIVE STREAM AUDIT REPORT")
+    print("=" * 80)
+    print(f"  Status:             {result.status.value.upper()}")
+    print(f"  Overall Score:      {result.overall_score:.1f} / 10.0")
+    print(f"  Streamed Frames:    {result.frames_streamed} (1 FPS)")
+    print(f"  Audio Duration:     {result.audio_streamed_seconds:.2f}s (16kHz PCM)")
+    print("-" * 80)
+    print(f"  [1] 3-SECOND HOOK:\n      {result.hook_evaluation}")
+    print(f"  [2] VOICE & ACTING:\n      {result.voice_acting_evaluation}")
+    print(f"  [3] VISUAL FLOW:\n      {result.visual_flow_evaluation}")
+    print(f"  [4] INTENT ACCURACY:\n      {result.intent_discrepancies}")
+    print("  [5] ACTIONABLE IMPROVEMENTS:")
+    for imp in result.actionable_improvements:
+        print(f"      • {imp}")
+    print("=" * 80 + "\n")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Jemini Autonomous Video Production CLI")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -551,11 +628,20 @@ def main():
     render_parser.add_argument("--output-dir", type=str, default="output", help="Destination folder for artifacts")
     render_parser.add_argument("--mock-mode", action="store_true", help="Execute in offline mock mode")
     render_parser.add_argument("--skip-validation", action="store_true", help="Skip multimodal validation loop")
+    render_parser.add_argument("--live-review", action="store_true", help="Perform real-time multimodal live review via Gemini 3.8 Live API WebSocket")
     render_parser.add_argument("--aspect-ratio", type=str, default="9:16", choices=["9:16", "16:9"], help="Aspect ratio (9:16 vertical or 16:9 widescreen)")
     render_parser.add_argument("--widescreen", action="store_true", help="Shortcut for 16:9 widescreen YouTube video")
     render_parser.add_argument("--publish-youtube", action="store_true", help="Upload rendered video to YouTube (Shorts or Widescreen)")
     render_parser.add_argument("--publish-tiktok", action="store_true", help="Upload rendered video to TikTok")
     render_parser.add_argument("--operator-review", action="store_true", help="Submit to operator review plane instead of publishing immediately")
+
+    # Subcommand: review-live
+    review_parser = subparsers.add_parser("review-live", help="Stream video and audio to Gemini 3.8 Live API for real-time review")
+    review_parser.add_argument("video_path", type=str, help="Path to rendered MP4 video file")
+    review_parser.add_argument("--intent", type=str, default="Вірусний ролик для соцмереж", help="Initial intent title or description")
+    review_parser.add_argument("--channel", type=str, default="cyber_matrix", help="Channel ID for audit log context")
+    review_parser.add_argument("--mock-mode", action="store_true", help="Simulate Live API review without network calls")
+
 
     # Subcommand: channels
     subparsers.add_parser("channels", help="List registered multi-channel profiles and branding")
@@ -609,8 +695,19 @@ def main():
                 publish_tiktok=args.publish_tiktok,
                 operator_review=args.operator_review,
                 aspect_ratio=target_aspect,
+                use_live_review=args.live_review,
             )
         )
+    elif args.command == "review-live":
+        asyncio.run(
+            handle_review_live(
+                video_path=args.video_path,
+                intent_title=args.intent,
+                channel_id=args.channel,
+                mock_mode=args.mock_mode,
+            )
+        )
+
     elif args.command == "channels":
         print_channels_table()
     elif args.command == "scout":

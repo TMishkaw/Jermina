@@ -40,3 +40,21 @@ class ValidationCard(BaseModel):
     suggested_correction_prompt: str | None = None
     iteration: int = 1
     media_path: str | None = None
+
+
+class LiveReviewResult(BaseModel):
+    """Multimodal streaming audit verdict from Gemini 3.8 Live API."""
+
+    video_path: str
+    duration_seconds: float
+    frames_streamed: int
+    audio_streamed_seconds: float
+    status: ValidationStatus
+    overall_score: float = Field(ge=0.0, le=10.0, description="Overall compliance score from 0.0 to 10.0")
+    hook_evaluation: str = Field(description="Analysis of first 3 seconds hook visual & audio engagement")
+    voice_acting_evaluation: str = Field(description="Golden Acting Standard compliance, emotion, natural delivery")
+    visual_flow_evaluation: str = Field(description="Typography, pacing, artifacts, visual coherence")
+    intent_discrepancies: str = Field(description="Comparison between expected intent and actual output")
+    actionable_improvements: list[str] = Field(default_factory=list, description="Concrete suggestions for refinement")
+    full_review_transcript: str = Field(description="Raw commentary received from Gemini Live API session")
+
