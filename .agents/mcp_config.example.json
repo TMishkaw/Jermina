@@ -17,6 +17,14 @@
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "YOUR_GITHUB_TOKEN_HERE"
       }
+    },
+    "jemini-studio-docs": {
+      "command": "D:\\JerminaStudio\\JerminaDev\\.venv\\Scripts\\python.exe",
+      "args": [
+        "-m",
+        "jemini.mcp.server"
+      ]
     }
   }
 }
+

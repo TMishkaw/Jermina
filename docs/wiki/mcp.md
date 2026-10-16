@@ -41,6 +41,13 @@ MCP виступає універсальним містком між агент
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "YOUR_GITHUB_TOKEN"
       }
+    },
+    "jemini-studio-docs": {
+      "command": "D:\\JerminaStudio\\JerminaDev\\.venv\\Scripts\\python.exe",
+      "args": [
+        "-m",
+        "jemini.mcp.server"
+      ]
     }
   }
 }
@@ -52,6 +59,7 @@ MCP виступає універсальним містком між агент
 
 | Назва сервера | Провайдер / Команда | Призначення |
 | :--- | :--- | :--- |
+| **`jemini-studio-docs`** | `.venv/Scripts/python -m jemini.mcp.server` | Швидкий пошук та надання повної документації з `docs/` (`studio_knowledge`, `wiki`, `guidelines`) через MCP інструменти. |
 | **`postgres-jemini`** | `npx -y @modelcontextprotocol/server-postgres` | Інспекція бази даних PostgreSQL, робота з таблицями ротатора та векторної пам'яті `pgvector`. |
 | **`github`** | `npx -y @modelcontextprotocol/server-github` | Керування гілками `dev`/`main`, відкриття Issues для багів та формування PR. |
 

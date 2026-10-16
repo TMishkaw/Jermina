@@ -934,10 +934,10 @@ def main():
 
     # Subcommand: studio-docs
     docs_parser = subparsers.add_parser("studio-docs", help="Query and inspect Jemini Studio Knowledge Base & Architectural Standards")
-    docs_parser.add_argument("action", choices=["list", "search", "get", "sections"], help="Action to execute")
+    docs_parser.add_argument("action", choices=["list", "search", "get", "sections", "serve"], help="Action to execute")
     docs_parser.add_argument("--query", "-q", type=str, default="", help="Search query string")
-    docs_parser.add_argument("--section", "-s", type=str, default=None, help="Filter by section (DevDocs, LiveAPIDocs, etc.)")
-    docs_parser.add_argument("--doc", "-d", type=str, default=None, help="Document name to retrieve (e.g. StickmanKinematics)")
+    docs_parser.add_argument("--section", "-s", type=str, default=None, help="Filter by section (DevDocs, LiveAPIDocs, wiki, guidelines, etc.)")
+    docs_parser.add_argument("--doc", "-d", type=str, default=None, help="Document name to retrieve (e.g. StickmanKinematics, git_flow)")
 
     args = parser.parse_args()
 
@@ -1083,6 +1083,12 @@ def main():
     elif args.command == "studio-docs":
         from jemini.mcp.studio_docs import StudioDocsEngine
 
+        if args.action == "serve":
+            from jemini.mcp.server import MCPServer
+
+            MCPServer().run_stdio()
+            return
+
         engine = StudioDocsEngine()
         if args.action == "sections":
             sections = engine.list_sections()
@@ -1110,7 +1116,7 @@ def main():
                 print(f"=== DOCUMENT: {doc_id} ===\n")
                 print(content)
             else:
-                print(f"Error: Document '{doc_id}' not found in studio_knowledge.")
+                print(f"Error: Document '{doc_id}' not found in docs/.")
                 sys.exit(1)
 
 

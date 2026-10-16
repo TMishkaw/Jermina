@@ -16,7 +16,7 @@
   - `status`: поточний стан (`active`, `rate_limited`, `exhausted`, `banned`).
   - `cooldown_until`: часова мітка блокування для пари `[ключ + модель]` після отримання 429.
 - **Model Routing**:
-  - *Диференціація за складністю*: автоматичний вибір моделі (`ROUTINE` &rarr; `gemini-2.5-flash`, `COMPLEX` &rarr; `gemini-2.5-pro`, `LIVE_STREAM` &rarr; `gemini-3.8-live`).
+  - *Диференціація за складністю*: автоматичний вибір моделі (`ROUTINE` &rarr; `gemini-3.1-flash-lite` / `gemini-3.5-flash-lite`, `COMPLEX` &rarr; `gemini-3.8-flash` / `gemini-3.1-pro-preview`, `LIVE_STREAM` &rarr; `gemini-3.8-live`).
   - *Ізоляція лімітів на рівні моделей*: вичерпання ліміту важкої моделі не блокує легку модель на тому самому ключі.
   - *Спільні ключі між проєктами*: єдиний облік запитів і блокувань.
 - **Обробка помилок 429 та Hot Standby**:
