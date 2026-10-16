@@ -1,0 +1,19 @@
+channel_id: "jermina_official"
+channel_name: "Jermina Voice Chronicles"
+core_theme: "Гумористичні та кібернетичні скетчі про штучний інтелект"
+tone_of_voice: "viral blogger drive, сарказм, жива емоційність"
+target_platforms:
+  - youtube
+  - tiktok
+niche_keywords:
+  - "штучний інтелект"
+  - "gemini"
+  - "анімація"
+  - "гумор"
+constraints:
+  - "Ніякого плоского синтезу мовлення"
+  - "Суворе дотримання Golden Acting Standard"
+custom_settings:
+  preferred_voice: "Zephyr"
+  hook_duration_seconds: 3
+  shorts_aspect_ratio: "9:16"
