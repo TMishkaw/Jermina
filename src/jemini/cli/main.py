@@ -616,6 +616,67 @@ async def handle_review_live(
     print("=" * 80 + "\n")
 
 
+async def handle_youtube_sync(
+    channel_id: str,
+    output_dir: str,
+    max_videos: int | None,
+) -> None:
+    """Synchronizes YouTube channel videos and comments to DB and JSON."""
+    from jemini.analytics.youtube_ingestor import YouTubeChannelIngestor
+
+    ingestor = YouTubeChannelIngestor(output_dir=output_dir)
+    res = await ingestor.ingest_channel(
+        channel_id=channel_id,
+        max_videos=max_videos if max_videos and max_videos > 0 else None,
+    )
+    print("\n" + "=" * 80)
+    print("       YOUTUBE CHANNEL DATA INGESTION COMPLETE")
+    print("=" * 80)
+    print(f"  Channel:         {res['channel']} ({res['channel_id']})")
+    print(f"  Videos Synced:   {res['videos_synced']}")
+    print(f"  Comments Synced: {res['comments_synced']}")
+    print(f"  Local Dump:      {res['dump_path']}")
+    print("=" * 80 + "\n")
+
+
+async def handle_analyze_comments(
+    channel_id: str,
+    limit: int,
+    batch_size: int,
+    enqueue: bool,
+    mock_mode: bool,
+) -> None:
+    """Performs batch semantic analysis of audience comments and enqueues viral hypotheses."""
+    from jemini.analytics.comment_analyzer import AudienceSentimentAnalyzer
+
+    rotator = _init_rotator()
+    analyzer = AudienceSentimentAnalyzer(rotator=rotator, batch_size=batch_size)
+    report = await analyzer.analyze_comments(
+        channel_id=channel_id,
+        limit=limit if limit > 0 else 500,
+        enqueue_hypotheses=enqueue,
+        mock_mode=mock_mode,
+    )
+    print("\n" + "=" * 80)
+    print("       AUDIENCE SENTIMENT & TOPIC INTELLIGENCE REPORT")
+    print("=" * 80)
+    print(f"  Total Comments Analyzed: {report.total_analyzed}")
+    print("  Sentiment Breakdown:")
+    for sent, count in report.sentiment_distribution.items():
+        print(f"    • {sent.upper():<16}: {count}")
+    print("-" * 80)
+    print("  Extracted Audience Topics & Questions:")
+    for top in report.top_audience_topics:
+        print(f"    • {top}")
+    print("-" * 80)
+    print("  Generated Viral Video Hypotheses:")
+    for hyp in report.generated_hypotheses:
+        print(f"    [+] {hyp}")
+    if report.enqueued_task_ids:
+        print(f"  Enqueued Tasks: {report.enqueued_task_ids}")
+    print("=" * 80 + "\n")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Jemini Autonomous Video Production CLI")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -676,6 +737,20 @@ def main():
     operator_parser.add_argument("--publish-tiktok", action="store_true", help="Publish to TikTok upon approval")
     operator_parser.add_argument("--mock-mode", action="store_true", help="Execute approval in mock mode")
 
+    # Subcommand: youtube-sync
+    yt_sync_parser = subparsers.add_parser("youtube-sync", help="Synchronize YouTube channel metadata, videos, and comments")
+    yt_sync_parser.add_argument("--channel-id", type=str, default="UC1ol6l3KL3sgmLPiwQy2QTA", help="YouTube Channel ID")
+    yt_sync_parser.add_argument("--output-dir", type=str, default="data/youtube_dump", help="Destination folder for JSON dump")
+    yt_sync_parser.add_argument("--max-videos", type=int, default=0, help="Max videos to sync (0 for all)")
+
+    # Subcommand: analyze-comments
+    comments_parser = subparsers.add_parser("analyze-comments", help="Analyze viewer comments sentiment and generate viral hypotheses")
+    comments_parser.add_argument("--channel-id", type=str, default="UC1ol6l3KL3sgmLPiwQy2QTA", help="YouTube Channel ID")
+    comments_parser.add_argument("--limit", type=int, default=100, help="Maximum comments to analyze in this run")
+    comments_parser.add_argument("--batch-size", type=int, default=25, help="Batch size for LLM evaluation")
+    comments_parser.add_argument("--no-enqueue", action="store_true", help="Do not enqueue generated hypotheses into Production Queue")
+    comments_parser.add_argument("--mock-mode", action="store_true", help="Run offline mock analysis without Gemini API")
+
     # Subcommand: test-readiness
     subparsers.add_parser("test-readiness", help="Run pre-flight Matrix Readiness Suite for QA handoff")
 
@@ -707,7 +782,24 @@ def main():
                 mock_mode=args.mock_mode,
             )
         )
-
+    elif args.command == "youtube-sync":
+        asyncio.run(
+            handle_youtube_sync(
+                channel_id=args.channel_id,
+                output_dir=args.output_dir,
+                max_videos=args.max_videos,
+            )
+        )
+    elif args.command == "analyze-comments":
+        asyncio.run(
+            handle_analyze_comments(
+                channel_id=args.channel_id,
+                limit=args.limit,
+                batch_size=args.batch_size,
+                enqueue=not args.no_enqueue,
+                mock_mode=args.mock_mode,
+            )
+        )
     elif args.command == "channels":
         print_channels_table()
     elif args.command == "scout":

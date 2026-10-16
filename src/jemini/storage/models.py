@@ -84,3 +84,58 @@ class ChannelAuditLog(Base):
     status: Mapped[str] = mapped_column(String(32))  # success, failure, retry, graceful_degradation
     details: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class YouTubeChannelRecord(Base):
+    """YouTube channel profile and global performance statistics."""
+    __tablename__ = "youtube_channels"
+
+    channel_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    title: Mapped[str] = mapped_column(String(255))
+    custom_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    description: Mapped[str] = mapped_column(Text, default="")
+    subscriber_count: Mapped[int] = mapped_column(Integer, default=0)
+    view_count: Mapped[int] = mapped_column(Integer, default=0)
+    video_count: Mapped[int] = mapped_column(Integer, default=0)
+    uploads_playlist_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    raw_data: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class YouTubeVideoRecord(Base):
+    """Archived YouTube videos with metadata, views, likes, and comment metrics."""
+    __tablename__ = "youtube_videos"
+
+    video_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    channel_id: Mapped[str] = mapped_column(String(64), index=True)
+    title: Mapped[str] = mapped_column(String(500))
+    description: Mapped[str] = mapped_column(Text, default="")
+    published_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    duration: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    duration_seconds: Mapped[float] = mapped_column(Float, default=0.0)
+    view_count: Mapped[int] = mapped_column(Integer, default=0)
+    like_count: Mapped[int] = mapped_column(Integer, default=0)
+    comment_count: Mapped[int] = mapped_column(Integer, default=0)
+    is_short: Mapped[bool] = mapped_column(default=True)
+    tags_json: Mapped[list[str]] = mapped_column(JSON, default=list)
+    raw_data: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class YouTubeCommentRecord(Base):
+    """Viewer comments and replies for sentiment and topic mining."""
+    __tablename__ = "youtube_comments"
+
+    comment_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    video_id: Mapped[str] = mapped_column(String(64), index=True)
+    author_name: Mapped[str] = mapped_column(String(255))
+    author_channel_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    text: Mapped[str] = mapped_column(Text)
+    like_count: Mapped[int] = mapped_column(Integer, default=0)
+    published_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    parent_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    sentiment: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    audience_topic: Mapped[str | None] = mapped_column(Text, nullable=True)
+    analyzed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    raw_data: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+
