@@ -7,10 +7,18 @@ from jemini.multimodal.live_engine import (
     VideoReviewReport,
     VisionEventType,
 )
-from jemini.multimodal.live_stream import LiveSessionClient
+from jemini.multimodal.live_stream import (
+    INPUT_AUDIO_SAMPLE_RATE_HZ,
+    MAX_VISION_INPUT_FPS,
+    OUTPUT_AUDIO_SAMPLE_RATE_HZ,
+    LiveSessionClient,
+)
 from jemini.multimodal.voice import ActingPromptBuilder, VoiceArchetype, VoiceProducer
 
 __all__ = [
+    "INPUT_AUDIO_SAMPLE_RATE_HZ",
+    "MAX_VISION_INPUT_FPS",
+    "OUTPUT_AUDIO_SAMPLE_RATE_HZ",
     "ActingPromptBuilder",
     "LiveAudioPacket",
     "LiveSessionClient",
