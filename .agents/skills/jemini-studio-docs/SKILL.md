@@ -26,6 +26,8 @@ Use this skill whenever you need authoritative specifications, architectural con
 | **LiveAPIDocs** | Close Code 1007 & Critical Constraints | [`ConstraintsAndGotchas.md`](file:///d:/JerminaStudio/JerminaDev/docs/studio_knowledge/LiveAPIDocs/ConstraintsAndGotchas.md) |
 | **LiveAPIDocs** | Blind Visual Audit & A/B Convergence | [`VisualBlindAudit.md`](file:///d:/JerminaStudio/JerminaDev/docs/studio_knowledge/LiveAPIDocs/VisualBlindAudit.md) |
 | **VideoProductionDocs** | Golden Acting & Voice Production | [`GoldenActingStandard.md`](file:///d:/JerminaStudio/JerminaDev/docs/studio_knowledge/VideoProductionDocs/GoldenActingStandard.md) |
+| **VideoProductionDocs** | Voice Archetypes Persona Matrix | [`VoiceArchetypes.md`](file:///d:/JerminaStudio/JerminaDev/docs/studio_knowledge/VideoProductionDocs/VoiceArchetypes.md) |
+| **VideoProductionDocs** | Vertical 9:16 Shorts Kinetic Layout | [`ShortsKineticLayout.md`](file:///d:/JerminaStudio/JerminaDev/docs/studio_knowledge/VideoProductionDocs/ShortsKineticLayout.md) |
 | **PublishingDocs** | YouTube Semantic Category Selection | [`YouTubeSemanticCategories.md`](file:///d:/JerminaStudio/JerminaDev/docs/studio_knowledge/PublishingDocs/YouTubeSemanticCategories.md) |
 | **PublishingDocs** | Zero-Leak DB Sanitization | [`ZeroLeakSanitization.md`](file:///d:/JerminaStudio/JerminaDev/docs/studio_knowledge/PublishingDocs/ZeroLeakSanitization.md) |
 

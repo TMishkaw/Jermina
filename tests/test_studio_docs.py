@@ -19,14 +19,17 @@ def test_studio_docs_list_documents():
     engine = StudioDocsEngine()
     docs = engine.list_documents()
 
-    assert len(docs) >= 8
+    assert len(docs) == 11
     doc_names = {d["doc_name"] for d in docs}
     assert "StickmanKinematics" in doc_names
     assert "MotionLibraryPgvector" in doc_names
+    assert "RemotionHardwareGPU" in doc_names
     assert "WebSocketStreaming" in doc_names
     assert "ConstraintsAndGotchas" in doc_names
     assert "VisualBlindAudit" in doc_names
     assert "GoldenActingStandard" in doc_names
+    assert "VoiceArchetypes" in doc_names
+    assert "ShortsKineticLayout" in doc_names
     assert "YouTubeSemanticCategories" in doc_names
     assert "ZeroLeakSanitization" in doc_names
 

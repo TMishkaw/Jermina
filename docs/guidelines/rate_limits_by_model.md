@@ -1,49 +1,35 @@
-# Peak usage per model compared to its limit over the last hour
+# Peak Usage & Rate Limits by Model (Jemini Workstation Tier)
 
-| Model | Category | RPM | TPM | RPD |
-| :--- | :--- | :--- | :--- | :--- |
-| Gemini 2.5 Flash Native Audio Dialog | Live API | 0 / Unlimited | 0 / 1M | 0 / Unlimited |
-| Gemini 3 Flash Live | Live API | 0 / Unlimited | 0 / 65K | 0 / Unlimited |
-| Gemini 3.5 Live Translate | Live API | 0 / Unlimited | 0 / 20K | 0 / Unlimited |
-| Gemini 3.5 Transcribe Live | Live API | 0 / Unlimited | 0 / 20K | 0 / Unlimited |
-| Gemini 3.8 Live | Live API | 0 / Unlimited | 0 / 65K | 0 / Unlimited |
-| Gemini 3.8 Live Extended Thinking | Live API | 0 / Unlimited | 0 / 65K | 0 / Unlimited |
-| Antigravity | Agents | 0 / 60 | 0 / 100K | 0 / 100 |
-| Deep Research Pro Preview | Agents | 0 / 0 | 0 / 0 | 0 / 0 |
-| Gemini 2 Flash | Text-out models | 0 / 0 | 0 / 0 | 0 / 0 |
-| Gemini 2 Flash Lite | Text-out models | 0 / 0 | 0 / 0 | 0 / 0 |
-| Computer Use Preview | Other models | 0 / 0 | 0 / 0 | 0 / 0 |
-| Gemini 2.5 Flash | Text-out models | 0 / 5 | 0 / 250K | 0 / 20 |
-| Nano Banana (Gemini 2.5 Flash Preview Image) | Multi-modal generative models | 0 / 0 | 0 / 0 | 0 / 0 |
-| Gemini 2.5 Flash Lite | Text-out models | 0 / 10 | 0 / 250K | 0 / 20 |
-| Gemini 2.5 Flash TTS | Multi-modal generative models | 0 / 3 | 0 / 10K | 0 / 10 |
-| Gemini 2.5 Pro | Text-out models | 0 / 0 | 0 / 0 | 0 / 0 |
-| Gemini 2.5 Pro TTS | Multi-modal generative models | 0 / 0 | 0 / 0 | 0 / 0 |
-| Gemini 3 Flash | Text-out models | 0 / 5 | 0 / 250K | 0 / 20 |
-| Nano Banana Pro (Gemini 3 Pro Image) | Multi-modal generative models | 0 / 0 | 0 / 0 | 0 / 0 |
-| Gemini 3.1 Pro | Text-out models | 0 / 0 | 0 / 0 | 0 / 0 |
-| Nano Banana 2 (Gemini 3.1 Flash Image) | Multi-modal generative models | 0 / 0 | 0 / 0 | 0 / 0 |
-| Gemini 3.1 Flash Lite | Text-out models | 0 / 15 | 0 / 250K | 0 / 500 |
-| Nano Banana 2 Lite (Gemini 3.1 Flash Lite Image) | Multi-modal generative models | 0 / 0 | 0 / 0 | 0 / 0 |
-| Gemini 3.1 Flash TTS | Multi-modal generative models | 0 / 3 | 0 / 10K | 0 / 10 |
-| Gemini 3.5 Flash | Text-out models | 0 / 5 | 0 / 250K | 0 / 20 |
-| Gemini 3.5 Flash Lite | Text-out models | 0 / 15 | 0 / 250K | 0 / 500 |
-| Gemini 3.5 Transcribe | Live API | 0 / 3 | 0 / 10K | 0 / 25 |
-| Gemini 3.6 Flash | Text-out models | 0 / 5 | 0 / 250K | 0 / 20 |
-| Gemini 3.7 Flash | Text-out models | 0 / 5 | 0 / 250K | 0 / 20 |
-| Gemini 3.8 Flash | Text-out models | 0 / 5 | 0 / 250K | 0 / 20 |
-| Gemini 3.8 Flash Lite TTS | Multi-modal generative models | 0 / 3 | 0 / 10K | 0 / 10 |
-| Gemini 3.8 Flash TTS | Multi-modal generative models | 0 / 3 | 0 / 10K | 0 / 10 |
-| Gemini Embedding 1 | Other models | 0 / 100 | 0 / 30K | 0 / 1K |
-| Gemini Embedding 2 | Other models | 0 / 100 | 0 / 30K | 0 / 1K |
-| Gemini Nano Banana 2.1 | Multi-modal generative models | 0 / 0 | 0 / 0 | 0 / 0 |
-| Gemini Omni 1.1 Flash | Multi-modal generative models | 0 / 0 | 0 / 0 | 0 / 0 |
-| Gemini Omni Flash | Multi-modal generative models | 0 / 0 | 0 / 0 | 0 / 0 |
-| Gemini Robotics ER 2 Preview | Other models | 0 / 5 | 0 / 250K | 0 / 20 |
-| Gemma 4 26B | Other models | 0 / 30 | 0 / 16K | 0 / 14.4K |
-| Gemma 4 31B | Other models | 0 / 30 | 0 / 16K | 0 / 14.4K |
-| Lyria 3 Clip | Multi-modal generative models | 0 / 0 | 0 / 0 | 0 / 0 |
-| Lyria 3 Pro | Multi-modal generative models | 0 / 0 | 0 / 0 | 0 / 0 |
-| Veo 3 Fast Generate | Multi-modal generative models | 0 / 0 | - | 0 / 0 |
-| Veo 3 Generate | Multi-modal generative models | 0 / 0 | - | 0 / 0 |
-| Veo 3 Lite Generate | Multi-modal generative models | 0 / 0 | - | 0 / 0 |
+## 1. Operational Quotas & Limits per Key (Google AI Studio Free Tier)
+
+| Model Name | Architectural Role in Jemini | RPM (Req/Min) | TPM (Tokens/Min) | RPD (Req/Day) | Cooldown on 429 |
+| :--- | :--- | :---: | :---: | :---: | :---: |
+| **`gemini-3.8-live`** | Real-time WebSocket Voice & Video Review | **Unlimited** | **65,000** | **Unlimited** | Immediate Reconnect (0s) |
+| **`gemini-3.8-live-extended-thinking`** | WebSocket with live background reasoning | **Unlimited** | **65,000** | **Unlimited** | Immediate Reconnect (0s) |
+| **`gemini-3.8-flash`** | Complex Reasoning, Isolated Vision Audits | 5 | 250,000 | 20 | 60s per key |
+| **`gemini-3.1-pro-preview`** | Deep planning, code architecture | 5 | 250,000 | 20 | 60s per key |
+| **`gemini-3.1-flash-lite`** | Routine parsing, sentiment, category routing | **15** | 250,000 | **500** | 30s per key |
+| **`gemini-3.5-flash-lite`** | High-throughput comments & script scoring | **15** | 250,000 | **500** | 30s per key |
+| **`gemini-embedding-2`** | pgvector semantic indexing (768-dim) | **100** | 30,000 | **1,000** | 10s per key |
+| **`gemini-2.5-flash-tts`** | Fallback speech synthesis | 3 | 10,000 | 10 | 60s per key |
+| **`gemini-3.8-flash-tts`** | High-fidelity voice generation | 3 | 10,000 | 10 | 60s per key |
+
+---
+
+## 2. API Key Rotator & Quota Strategy (`APIKeyRotator`)
+
+### 2.1 Free-Tier First & Hot Standby
+- The studio pool maintains **5 active API keys** registered in `settings.gemini_api_keys`.
+- Cumulative free daily capacity across 5 keys:
+  - `gemini-3.1-flash-lite` / `3.5-flash-lite`: **2,500 RPD** (Requests per Day)
+  - `gemini-embedding-2`: **5,000 RPD**
+  - `gemini-3.8-live`: **Unlimited audio synthesis and video reviews**
+
+### 2.2 Model-Specific Cooldown Isolation
+- Receiving HTTP `429` (Too Many Requests) locks only the pair `[key_id + model_name]`.
+- If Key #1 exhausts its quota for `gemini-3.8-flash`, it remains completely active and unblocked for `gemini-3.1-flash-lite` or `gemini-embedding-2`.
+- Active streams transparently fail over to the next standby key in $< 50\text{ ms}$.
+
+### 2.3 Spike Handling (503 Service Unavailable)
+- Google API capacity spikes trigger immediate key rotation or graceful fallback:
+  - If `gemini-3.8-flash` is saturated, tasks fall back to `gemini-3.1-pro-preview` or `gemini-3.5-flash-lite` depending on complexity tier.
