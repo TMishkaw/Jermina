@@ -19,6 +19,7 @@ class SemanticActingCue:
     mouth_type: str
     prop: str
     emoji: str | None
+    custom_pose: dict[str, Any] | None = None
 
 
 # Lexical semantic rule mapping: (keywords/stems, animation, eye, mouth, prop, emojis)
@@ -254,6 +255,7 @@ class SemanticActor:
                         "mouthType": acting.mouth_type,
                         "prop": acting.prop,
                         "emoji": acting.emoji,
+                        "customPose": acting.custom_pose,
                     })
                     current_cursor = s_start
 
@@ -268,6 +270,7 @@ class SemanticActor:
                     "mouthType": acting.mouth_type,
                     "prop": acting.prop,
                     "emoji": acting.emoji,
+                    "customPose": acting.custom_pose,
                 })
                 current_cursor = s_start + sub_dur
 
@@ -283,6 +286,7 @@ class SemanticActor:
                     "mouthType": acting.mouth_type,
                     "prop": acting.prop,
                     "emoji": acting.emoji,
+                    "customPose": acting.custom_pose,
                 })
             return cues
 
@@ -301,6 +305,7 @@ class SemanticActor:
                 "mouthType": acting.mouth_type,
                 "prop": acting.prop,
                 "emoji": acting.emoji,
+                "customPose": acting.custom_pose,
             })
             current_frame += dur
             idx += 1

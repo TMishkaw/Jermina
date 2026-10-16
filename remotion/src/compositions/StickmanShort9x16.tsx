@@ -288,6 +288,7 @@ export const StickmanShort9x16: React.FC<{ config?: StickmanShortConfig }> = ({
           y={1400}
           scale={1.8}
           animation={activeCue.animation}
+          customPose={activeCue.customPose}
           eyeType={activeCue.eyeType}
           mouthType={activeCue.mouthType}
           prop={activeCue.prop}

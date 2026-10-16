@@ -139,3 +139,23 @@ class YouTubeCommentRecord(Base):
     analyzed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     raw_data: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
 
+
+class StickmanMotionRecord(Base):
+    """Scalable dynamic motion library storing kinematic parameters, props, and vector embeddings."""
+    __tablename__ = "stickman_motions"
+
+    motion_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    category: Mapped[str] = mapped_column(String(64), index=True)  # emotion, gesture, prop, reaction, action
+    intent_description: Mapped[str] = mapped_column(Text)
+    keywords: Mapped[list[str]] = mapped_column(JSON, default=list)  # Ukrainian keywords & synonyms
+    kinematic_spec: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)  # angles, timing, bounce, prop, emoji
+    embedding: Mapped[list[float] | None] = mapped_column(Vector(768), nullable=True)
+    consecutive_wins: Mapped[int] = mapped_column(Integer, default=2)
+    win_rate: Mapped[float] = mapped_column(Float, default=1.0)
+    version: Mapped[str] = mapped_column(String(16), default="v1.0")
+    status: Mapped[str] = mapped_column(String(32), default="active", index=True)
+    evolution_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
