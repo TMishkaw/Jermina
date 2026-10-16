@@ -22,7 +22,13 @@ from jemini.storage.database import AsyncSessionLocal
 
 logger = logging.getLogger(__name__)
 
-YOUTUBE_UPLOAD_SCOPE = ["https://www.googleapis.com/auth/youtube.upload"]
+YOUTUBE_SCOPES = [
+    "https://www.googleapis.com/auth/youtube.upload",
+    "https://www.googleapis.com/auth/youtube",
+    "https://www.googleapis.com/auth/youtube.force-ssl",
+    "https://www.googleapis.com/auth/youtube.readonly",
+]
+YOUTUBE_UPLOAD_SCOPE = YOUTUBE_SCOPES
 
 
 class PublishingPrivacyStatus(str, Enum):

@@ -68,5 +68,7 @@ node_modules/
 remotion/build/
 remotion/out/
 remotion/active_props.json
+remotion/public/*.wav
+remotion/public/*.mp3
 out/
 

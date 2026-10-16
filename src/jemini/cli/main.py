@@ -57,6 +57,7 @@ async def run_e2e_render(
     aspect_ratio: str = "9:16",
     max_correction_attempts: int = 2,
     use_live_review: bool = False,
+    public: bool = False,
 ) -> dict[str, Any]:
     """Executes the full autonomous pipeline with self-correction."""
     out_dir = Path(output_dir).resolve()
@@ -215,13 +216,14 @@ async def run_e2e_render(
         else:
             is_short = aspect_ratio in ["9:16", "vertical"]
             target_label = "YouTube Shorts" if is_short else "YouTube (16:9 Widescreen)"
-            logger.info("Publishing video to %s...", target_label)
+            target_privacy = PublishingPrivacyStatus.PUBLIC if public else PublishingPrivacyStatus.UNLISTED
+            logger.info("Publishing video to %s (Status: %s)...", target_label, target_privacy.value.upper())
             published_res = await publisher.publish_video(
                 video_path=final_video,
                 metadata=YouTubeShortMetadata(
                     title=short_script.title,
                     description=f"{short_script.hook_text}\n\nСтворено повністю автономно через рушій Jemini.",
-                    privacy_status=PublishingPrivacyStatus.UNLISTED,
+                    privacy_status=target_privacy,
                 ),
                 is_short=is_short,
                 channel_id=profile.channel_id,
@@ -423,7 +425,13 @@ async def handle_scout(channel_id: str, count: int, enqueue: bool, mock_mode: bo
     print()
 
 
-async def handle_queue(list_tasks: bool, process_next: bool, mock_mode: bool) -> None:
+async def handle_queue(
+    list_tasks: bool,
+    process_next: bool,
+    publish_youtube: bool = False,
+    public: bool = False,
+    mock_mode: bool = False,
+) -> None:
     """Inspects or processes scheduled production tasks."""
     from jemini.scheduling.queue import ProductionQueue
 
@@ -439,6 +447,8 @@ async def handle_queue(list_tasks: bool, process_next: bool, mock_mode: bool) ->
             res = await run_e2e_render(
                 topic=pending.topic,
                 channel_id=pending.channel_id,
+                publish_youtube=publish_youtube,
+                public=public,
                 mock_mode=mock_mode,
             )
             score = res.get("validation_card", {}).get("overall_score") if res.get("validation_card") else 9.0
@@ -677,6 +687,38 @@ async def handle_analyze_comments(
     print("=" * 80 + "\n")
 
 
+async def handle_youtube_verify(channel_id: str, count: int, mock_mode: bool) -> None:
+    """Verifies live channel status and confirms recent uploads on YouTube."""
+    from jemini.publishing.youtube_watcher import YouTubeVerificationWatcher
+
+    watcher = YouTubeVerificationWatcher()
+    report = await watcher.verify_channel_publications(
+        channel_id=channel_id,
+        recent_limit=count,
+        mock_mode=mock_mode,
+    )
+    print("\n" + "=" * 85)
+    print("                YOUTUBE LIVE CHANNEL PUBLICATION AUDIT")
+    print("=" * 85)
+    print(f"  Channel:           {report.channel_title} ({report.channel_id})")
+    print(f"  Subscribers:       {report.subscriber_count}")
+    print(f"  Total Views:       {report.total_view_count}")
+    print(f"  Total Videos:      {report.total_video_count}")
+    print(f"  System Health:     [{report.system_health}]")
+    print("-" * 85)
+    print("  LATEST LIVE UPLOADS ON YOUTUBE:")
+    for idx, v in enumerate(report.latest_uploads, 1):
+        dur = f"{v.duration_seconds:.0f}s"
+        fmt = "Short" if v.is_short else "Wide"
+        print(f"  [{idx}] {v.video_id} | {fmt:<5} ({dur:>4}) | {v.privacy_status:<8} | {v.view_count:>4} views | {v.title[:45]}")
+    print("-" * 85)
+    if report.missing_from_youtube:
+        print(f"  WARNING: Missing videos detected: {report.missing_from_youtube}")
+    else:
+        print("  ✓ All recent database uploads confirmed live on YouTube!")
+    print("=" * 85 + "\n")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Jemini Autonomous Video Production CLI")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -693,6 +735,7 @@ def main():
     render_parser.add_argument("--aspect-ratio", type=str, default="9:16", choices=["9:16", "16:9"], help="Aspect ratio (9:16 vertical or 16:9 widescreen)")
     render_parser.add_argument("--widescreen", action="store_true", help="Shortcut for 16:9 widescreen YouTube video")
     render_parser.add_argument("--publish-youtube", action="store_true", help="Upload rendered video to YouTube (Shorts or Widescreen)")
+    render_parser.add_argument("--public", action="store_true", help="Publish video publicly to YouTube (default is Unlisted)")
     render_parser.add_argument("--publish-tiktok", action="store_true", help="Upload rendered video to TikTok")
     render_parser.add_argument("--operator-review", action="store_true", help="Submit to operator review plane instead of publishing immediately")
 
@@ -718,6 +761,8 @@ def main():
     queue_parser = subparsers.add_parser("queue", help="Manage production queue")
     queue_parser.add_argument("--list", action="store_true", help="List tasks in queue")
     queue_parser.add_argument("--process-next", action="store_true", help="Process and render next queued task")
+    queue_parser.add_argument("--publish-youtube", action="store_true", help="Publish completed video to YouTube")
+    queue_parser.add_argument("--public", action="store_true", help="Publish video publicly to YouTube (default is Unlisted)")
     queue_parser.add_argument("--mock-mode", action="store_true", help="Run queue processing in mock mode")
 
     # Subcommand: feedback
@@ -751,6 +796,12 @@ def main():
     comments_parser.add_argument("--no-enqueue", action="store_true", help="Do not enqueue generated hypotheses into Production Queue")
     comments_parser.add_argument("--mock-mode", action="store_true", help="Run offline mock analysis without Gemini API")
 
+    # Subcommand: youtube-verify
+    yt_verify_parser = subparsers.add_parser("youtube-verify", help="Audit live YouTube channel uploads and confirm publication status")
+    yt_verify_parser.add_argument("--channel-id", type=str, default="UC1ol6l3KL3sgmLPiwQy2QTA", help="YouTube Channel ID")
+    yt_verify_parser.add_argument("--count", type=int, default=5, help="Number of recent uploads to audit")
+    yt_verify_parser.add_argument("--mock-mode", action="store_true", help="Run audit in mock mode")
+
     # Subcommand: test-readiness
     subparsers.add_parser("test-readiness", help="Run pre-flight Matrix Readiness Suite for QA handoff")
 
@@ -767,6 +818,7 @@ def main():
                 mock_mode=args.mock_mode,
                 skip_validation=args.skip_validation,
                 publish_youtube=args.publish_youtube,
+                public=args.public,
                 publish_tiktok=args.publish_tiktok,
                 operator_review=args.operator_review,
                 aspect_ratio=target_aspect,
@@ -800,6 +852,14 @@ def main():
                 mock_mode=args.mock_mode,
             )
         )
+    elif args.command == "youtube-verify":
+        asyncio.run(
+            handle_youtube_verify(
+                channel_id=args.channel_id,
+                count=args.count,
+                mock_mode=args.mock_mode,
+            )
+        )
     elif args.command == "channels":
         print_channels_table()
     elif args.command == "scout":
@@ -816,6 +876,8 @@ def main():
             handle_queue(
                 list_tasks=args.list,
                 process_next=args.process_next,
+                publish_youtube=args.publish_youtube,
+                public=args.public,
                 mock_mode=args.mock_mode,
             )
         )
