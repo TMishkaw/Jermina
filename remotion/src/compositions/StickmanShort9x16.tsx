@@ -215,15 +215,15 @@ export const StickmanShort9x16: React.FC<{ config?: StickmanShortConfig }> = ({
         </div>
       )}
 
-      {/* 8. Cyber Terminal Window (Frames 70-220, placed high at top: 220, zIndex: 12) */}
+      {/* 8. Cyber Terminal Window (Frames 70-220, full size, unscaled readability) */}
       {frame >= 70 && frame < 225 && (
         <div
           style={{
             position: "absolute",
-            top: 220,
-            left: 70,
-            right: 70,
-            transform: `scale(${Math.min(0.88, terminalEntrance * 0.88)}) translateY(${(1 - Math.min(1, terminalEntrance)) * 30}px)`,
+            top: 200,
+            left: 40,
+            right: 40,
+            transform: `translateY(${(1 - Math.min(1, terminalEntrance)) * 30}px)`,
             opacity: Math.min(1, terminalEntrance),
             zIndex: 12,
           }}
@@ -242,21 +242,34 @@ export const StickmanShort9x16: React.FC<{ config?: StickmanShortConfig }> = ({
         </div>
       )}
 
-      {/* 8.5 Forma 2-B HUD Vector Blueprint (Frames 225+, placed high at top: 220, zIndex: 12) */}
+      {/* 8.5 Forma 2-B HUD Vector Blueprint (Frames 225+, full scale 1.0, maximum mobile legibility) */}
       {frame >= 225 && frame < (config.totalFrames ? config.totalFrames - 45 : 340) && (
         <div
           style={{
             position: "absolute",
-            top: 220,
-            left: 70,
-            right: 70,
-            transform: "scale(0.88)",
+            top: 200,
+            left: 40,
+            right: 40,
             zIndex: 12,
           }}
         >
           <Forma2BBlueprint accentColor={config.accentColor} />
         </div>
       )}
+
+      {/* 8.8 Presenter Holographic Platform (Feet anchor line above subtitles) */}
+      <div
+        style={{
+          position: "absolute",
+          top: 1590,
+          left: 200,
+          right: 200,
+          height: 3,
+          background: `linear-gradient(90deg, transparent, ${config.accentColor}99 30%, ${config.accentColor} 50%, ${config.accentColor}99 70%, transparent)`,
+          boxShadow: `0 0 16px ${config.accentColor}`,
+          zIndex: 20,
+        }}
+      />
 
       {/* 9. Dynamic 2.5D Stickman Character (Presenter Foreground Layer: zIndex 25) */}
       <svg
@@ -272,8 +285,8 @@ export const StickmanShort9x16: React.FC<{ config?: StickmanShortConfig }> = ({
       >
         <StickmanRig
           x={540}
-          y={1240}
-          scale={1.9}
+          y={1400}
+          scale={1.8}
           animation={activeCue.animation}
           eyeType={activeCue.eyeType}
           mouthType={activeCue.mouthType}
@@ -290,9 +303,9 @@ export const StickmanShort9x16: React.FC<{ config?: StickmanShortConfig }> = ({
           emoji={activeCue.emoji}
           fromFrame={activeCue.fromFrame}
           durationInFrames={activeCue.durationInFrames}
-          x={680}
-          y={920}
-          size={100}
+          x={720}
+          y={1040}
+          size={110}
           accentColor={config.accentColor}
         />
       )}

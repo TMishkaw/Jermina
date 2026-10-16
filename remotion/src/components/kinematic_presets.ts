@@ -36,6 +36,13 @@ export type AnimationType =
   | "talk"
   | "point"
   | "point_up"
+  | "point_user"
+  | "point_to_emoji"
+  | "stop"
+  | "heart_hands"
+  | "watch_time"
+  | "shrug"
+  | "explain"
   | "surprised"
   | "shocked"
   | "laugh"
@@ -169,6 +176,149 @@ export function getPoseForFrame(
         rightHipAngle: 4,
         rightKneeAngle: 2,
         talkingCadence: speechSync,
+      };
+    }
+
+    case "point_user": {
+      // Directly points index finger at the camera/user with assertive authority
+      const nod = Math.sin(time * 2.5 * twoPi) * 3;
+      const pulse = Math.sin(time * 3 * twoPi) * 2;
+      return {
+        rootYOffset: Math.sin(time * 0.8 * twoPi) * 2,
+        rootXOffset: 0,
+        torsoAngle: 6, // lean toward camera
+        headTilt: 2 + nod,
+        leftShoulderAngle: 22, // hand confidently placed on hip
+        leftElbowAngle: 105,
+        rightShoulderAngle: -68 + pulse, // arm aimed straight at viewer
+        rightElbowAngle: 4,
+        leftHipAngle: -8,
+        leftKneeAngle: 10,
+        rightHipAngle: 12,
+        rightKneeAngle: 14,
+        talkingCadence: (Math.sin(time * 6 * twoPi) + 1) / 2,
+      };
+    }
+
+    case "point_to_emoji": {
+      // Looks up and points arm diagonally up towards floating emoji
+      const sway = Math.sin(time * 1.2 * twoPi) * 3;
+      return {
+        rootYOffset: Math.sin(time * 0.7 * twoPi) * 2,
+        rootXOffset: -2,
+        torsoAngle: -4,
+        headTilt: -22, // tilted sharply upward watching the emoji
+        leftShoulderAngle: -15,
+        leftElbowAngle: 30,
+        rightShoulderAngle: -125 + sway, // high diagonal aim
+        rightElbowAngle: 10,
+        leftHipAngle: -4,
+        leftKneeAngle: 6,
+        rightHipAngle: 8,
+        rightKneeAngle: 4,
+        talkingCadence: 0.7,
+      };
+    }
+
+    case "stop": {
+      // Strong defensive STOP gesture: palms raised forward, body braced
+      const tension = Math.sin(time * 6 * twoPi) * 1.5;
+      return {
+        rootYOffset: -2,
+        rootXOffset: 0,
+        torsoAngle: -7 + tension, // recoil backwards
+        headTilt: -2,
+        leftShoulderAngle: -75, // both hands thrust forward
+        leftElbowAngle: 12,
+        rightShoulderAngle: -80,
+        rightElbowAngle: 10,
+        leftHipAngle: -14, // wide braced stance
+        leftKneeAngle: 18,
+        rightHipAngle: 14,
+        rightKneeAngle: 16,
+        talkingCadence: 0.9,
+      };
+    }
+
+    case "heart_hands": {
+      // Both arms arch above head to sculpt a pulsating heart
+      const heartbeat = Math.abs(Math.sin(time * 2.5 * twoPi)) * 8;
+      const pulseArm = Math.sin(time * 2.5 * twoPi) * 4;
+      return {
+        rootYOffset: -heartbeat,
+        rootXOffset: 0,
+        torsoAngle: 0,
+        headTilt: -4, // loving upward gaze
+        leftShoulderAngle: -135 + pulseArm,
+        leftElbowAngle: 80,
+        rightShoulderAngle: -135 - pulseArm,
+        rightElbowAngle: 80,
+        leftHipAngle: -6,
+        leftKneeAngle: 6,
+        rightHipAngle: 6,
+        rightKneeAngle: 6,
+        talkingCadence: 0.85,
+      };
+    }
+
+    case "watch_time": {
+      // Checking watch on left wrist, right hand taps wrist
+      const tap = Math.sin(time * 5 * twoPi) * 10;
+      return {
+        rootYOffset: 0,
+        rootXOffset: 0,
+        torsoAngle: 3,
+        headTilt: 16, // looking down at left wrist
+        leftShoulderAngle: -42, // wrist held in front of chest
+        leftElbowAngle: 90,
+        rightShoulderAngle: -35 + tap * 0.4,
+        rightElbowAngle: 75 + tap,
+        leftHipAngle: -2,
+        leftKneeAngle: 4,
+        rightHipAngle: 6,
+        rightKneeAngle: 6,
+        talkingCadence: 0.5,
+      };
+    }
+
+    case "shrug": {
+      // Questioning shrug: raised shoulders, open palms out, head tilted
+      const shrugCycle = Math.sin(time * 1.6 * twoPi);
+      return {
+        rootYOffset: Math.abs(shrugCycle) * 3,
+        rootXOffset: 0,
+        torsoAngle: 0,
+        headTilt: 12 + shrugCycle * 3, // curious head tilt
+        leftShoulderAngle: -45 + shrugCycle * 6,
+        leftElbowAngle: 90,
+        rightShoulderAngle: -45 - shrugCycle * 6,
+        rightElbowAngle: 90,
+        leftHipAngle: -4,
+        leftKneeAngle: 4,
+        rightHipAngle: 4,
+        rightKneeAngle: 4,
+        talkingCadence: 0.7,
+      };
+    }
+
+    case "explain": {
+      // Flowing two-handed conversational explanation
+      const waveL = Math.sin(time * 2.0 * twoPi) * 15;
+      const waveR = Math.cos(time * 2.0 * twoPi) * 15;
+      return {
+        rootYOffset: Math.sin(time * 0.9 * twoPi) * 2,
+        rootXOffset: Math.sin(time * 0.5 * twoPi) * 2,
+        torsoAngle: Math.sin(time * 0.8 * twoPi) * 2,
+        headTilt: Math.sin(time * 1.4 * twoPi) * 3,
+        leftShoulderAngle: -30 + waveL,
+        leftElbowAngle: 50 + waveL * 0.5,
+        rightShoulderAngle: -35 + waveR,
+        rightElbowAngle: 50 + waveR * 0.5,
+        leftHipAngle: -2,
+        leftKneeAngle: 3,
+        rightHipAngle: 3,
+        rightKneeAngle: 2,
+        talkingCadence: (Math.sin(time * 6 * twoPi) + 1) / 2,
       };
     }
 

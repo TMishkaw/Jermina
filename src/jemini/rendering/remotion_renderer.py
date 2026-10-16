@@ -15,6 +15,7 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from jemini.orchestration.limits import PipelineLimits
+from jemini.rendering.semantic_actor import SemanticActor
 
 logger = logging.getLogger(__name__)
 
@@ -52,132 +53,18 @@ class RemotionRenderer:
         self.out_dir.mkdir(parents=True, exist_ok=True)
 
     @staticmethod
-    def _classify_semantic_cue(text: str, fallback_idx: int) -> tuple[str, str, str, str, str | None]:
-        """Maps spoken Ukrainian phrase to (animation, eyeType, mouthType, prop, emoji)."""
-        lower = text.lower()
-
-        # 1. Love / Emotions / Heart / Feelings
-        if any(w in lower for w in ["любов", "коханн", "почутт", "відчува", "серц", "душ", "любит", "емоці"]):
-            return ("celebrate", "happy", "smile", "none", "💖")
-
-        # 2. Paradox / Question / Mystery / Why / How
-        if any(w in lower for w in ["чи може", "чому", "як ", "що ", "хто ", "куди", "навіщо", "парадокс", "загадк", "секрет", "?", "справді"]):
-            return ("point_up", "wide", "gasp", "none", "❓")
-
-        # 3. AI / Brain / LLM / Model / Neural / Code / Smart
-        if any(w in lower for w in ["штучн", "інтелект", "ші", "ai", "нейромереж", "мозок", "код", "алгоритм", "модел", "gemini", "тест"]):
-            return ("point_up", "neutral", "talking", "laptop", "🧠")
-
-        # 4. Robot / Cyborg / Tech / Machine / Factory
-        if any(w in lower for w in ["робот", "машин", "бот", "заліз", "процесор", "двійник", "завод", "індустрі"]):
-            return ("walk", "neutral", "talking", "none", "🤖")
-
-        # 5. Shock / Stop / Extreme / Danger
-        if any(w in lower for w in ["стоп", "шок", "небезпек", "знов", "уваг", "криз", "катастроф", "неймовірн", "жах"]):
-            return ("shocked", "wide", "gasp", "none", "🤯")
-
-        # 6. Humor / Irony / Coffee / Laugh
-        if any(w in lower for w in ["смішн", "жарт", "ха-ха", "посміш", "пфф", "кав", "відпочин", "баг"]):
-            return ("laugh", "happy", "smile", "coffee", "😂")
-
-        # 7. Money / Cost / Free / Tokens
-        if any(w in lower for w in ["грош", "долар", "гривн", "токен", "цін", "вартіст", "безкоштовн", "0 грн", "заробіт"]):
-            return ("celebrate", "wink", "smile", "none", "💸")
-
-        # 8. Call To Action / Subscribe / Follow / Watch
-        if any(w in lower for w in ["підпис", "канал", "коментар", "тисн", "лайк", "дзвіноч", "дивіть", "посиланн"]):
-            return ("celebrate", "wink", "smile", "microphone", "👇")
-
-        # Dynamic fallback rotation for conversational cadence
-        alternatives = [
-            ("surprised", "wide", "gasp", "none", "🤯"),
-            ("talk", "neutral", "talking", "microphone", "💡"),
-            ("point_up", "wink", "smile", "none", "⚡"),
-            ("laugh", "happy", "smile", "coffee", "😂"),
-            ("celebrate", "happy", "smile", "none", "🚀"),
-        ]
-        return alternatives[fallback_idx % len(alternatives)]
+    def _classify_semantic_cue(text: str, fallback_idx: int = 0) -> tuple[str, str, str, str, str | None]:
+        """Classifies spoken text and returns (animation, eye, mouth, prop, emoji)."""
+        cue = SemanticActor.classify_phrase(text, fallback_idx)
+        return (cue.animation, cue.eye_type, cue.mouth_type, cue.prop, cue.emoji)
 
     def generate_stickman_cues(
         self,
         total_frames: int,
         subtitles: list[dict[str, Any]] | None = None,
     ) -> list[dict[str, Any]]:
-        """Generates semantic acting cues tailored to spoken subtitles with lively gesturing and floating emojis."""
-        cues: list[dict[str, Any]] = []
-
-        if subtitles:
-            # Build cues tightly synchronized with spoken subtitle timings
-            current_cursor = 0
-            for idx, sub in enumerate(subtitles):
-                s_start = int(sub.get("startFrame", current_cursor))
-                s_end = int(sub.get("endFrame", s_start + 60))
-                s_text = str(sub.get("text", ""))
-
-                # Fill any gap before this subtitle
-                if s_start > current_cursor:
-                    gap_dur = s_start - current_cursor
-                    anim, eye, mouth, prop, emoji = self._classify_semantic_cue("", idx)
-                    cues.append({
-                        "fromFrame": current_cursor,
-                        "durationInFrames": gap_dur,
-                        "animation": anim,
-                        "eyeType": eye,
-                        "mouthType": mouth,
-                        "prop": prop,
-                        "emoji": emoji,
-                    })
-                    current_cursor = s_start
-
-                # Add semantic cue for the spoken subtitle
-                sub_dur = max(s_end - s_start, 30)
-                anim, eye, mouth, prop, emoji = self._classify_semantic_cue(s_text, idx)
-                cues.append({
-                    "fromFrame": s_start,
-                    "durationInFrames": sub_dur,
-                    "animation": anim,
-                    "eyeType": eye,
-                    "mouthType": mouth,
-                    "prop": prop,
-                    "emoji": emoji,
-                })
-                current_cursor = s_start + sub_dur
-
-            # Fill remaining frames if audio is longer than last subtitle
-            if current_cursor < total_frames:
-                rem_dur = total_frames - current_cursor
-                anim, eye, mouth, prop, emoji = self._classify_semantic_cue("підпишись", len(subtitles))
-                cues.append({
-                    "fromFrame": current_cursor,
-                    "durationInFrames": rem_dur,
-                    "animation": anim,
-                    "eyeType": eye,
-                    "mouthType": mouth,
-                    "prop": prop,
-                    "emoji": emoji,
-                })
-            return cues
-
-        # Default fallback if no subtitles provided
-        current_frame = 0
-        step_duration = 60  # ~2 seconds per cue
-        idx = 0
-        while current_frame < total_frames:
-            dur = min(step_duration, total_frames - current_frame)
-            anim, eye, mouth, prop, emoji = self._classify_semantic_cue("", idx)
-            cues.append({
-                "fromFrame": current_frame,
-                "durationInFrames": dur,
-                "animation": anim,
-                "eyeType": eye,
-                "mouthType": mouth,
-                "prop": prop,
-                "emoji": emoji,
-            })
-            current_frame += dur
-            idx += 1
-
-        return cues
+        """Generates semantic acting cues tailored to spoken subtitles via SemanticActor ontology."""
+        return SemanticActor.generate_cues_for_subtitles(total_frames=total_frames, subtitles=subtitles)
 
     async def render_video(
         self,

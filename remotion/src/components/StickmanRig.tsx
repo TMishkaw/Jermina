@@ -17,7 +17,7 @@ export interface StickmanRigProps {
   headRadius?: number;
   torsoLength?: number;
   limbLength?: number;
-  prop?: "microphone" | "sword" | "coffee" | "laptop" | "none";
+  prop?: "microphone" | "sword" | "coffee" | "laptop" | "heart" | "stop_sign" | "watch" | "none";
 }
 
 export const StickmanRig: React.FC<StickmanRigProps> = ({
@@ -83,7 +83,7 @@ export const StickmanRig: React.FC<StickmanRigProps> = ({
   const rightKnee = getSegmentEnd(10, hipY, limbLength, pose.rightHipAngle);
   const rightFoot = getSegmentEnd(rightKnee.x, rightKnee.y, limbLength, pose.rightHipAngle + pose.rightKneeAngle);
 
-  // Render optional accessories/props in right hand
+  // Render optional accessories/props in right hand or scene
   const renderProp = () => {
     switch (prop) {
       case "microphone":
@@ -105,6 +105,41 @@ export const StickmanRig: React.FC<StickmanRigProps> = ({
           <g transform={`translate(${rightHand.x + 6}, ${rightHand.y - 4})`}>
             <rect x={-8} y={-10} width={16} height={20} rx={3} fill="#DDD" stroke={color} strokeWidth={2} />
             <path d="M 0 -14 Q 3 -18 0 -22" stroke="#FFF" strokeWidth={2} fill="none" opacity={0.7} />
+          </g>
+        );
+      case "laptop":
+        return (
+          <g transform={`translate(${rightHand.x - 8}, ${rightHand.y - 10})`}>
+            <rect x={-14} y={-4} width={28} height={16} rx={2} fill="#1E293B" stroke={glowColor} strokeWidth={2} />
+            <rect x={-12} y={-16} width={24} height={13} rx={2} fill="#0F172A" stroke={glowColor} strokeWidth={1.5} />
+            <line x1={-8} y1={-10} x2={6} y2={-10} stroke={glowColor} strokeWidth={1.5} />
+            <line x1={-8} y1={-6} x2={2} y2={-6} stroke="#38BDF8" strokeWidth={1.5} />
+          </g>
+        );
+      case "heart":
+        return (
+          <g transform={`translate(0, ${headY - headRadius - 16}) scale(${1 + Math.sin(frame * 0.25) * 0.15})`}>
+            <path
+              d="M 0 -6 C -8 -20, -22 -4, 0 14 C 22 -4, 8 -20, 0 -6 Z"
+              fill="#FF007F"
+              stroke="#FFFFFF"
+              strokeWidth={2}
+              style={{ filter: "drop-shadow(0px 0px 8px #FF007F)" }}
+            />
+          </g>
+        );
+      case "stop_sign":
+        return (
+          <g transform={`translate(${rightHand.x + 12}, ${rightHand.y - 12})`}>
+            <polygon points="-12,-6 -6,-12 6,-12 12,-6 12,6 6,12 -6,12 -12,6" fill="#EF4444" stroke="#FFFFFF" strokeWidth={2} />
+            <text x={0} y={4} fill="#FFFFFF" fontSize={7} fontWeight="900" textAnchor="middle" fontFamily="sans-serif">STOP</text>
+          </g>
+        );
+      case "watch":
+        return (
+          <g transform={`translate(${leftHand.x}, ${leftHand.y})`}>
+            <circle cx={0} cy={0} r={6} fill="#0F172A" stroke={glowColor} strokeWidth={2} />
+            <circle cx={0} cy={0} r={2} fill={glowColor} />
           </g>
         );
       case "none":
@@ -208,6 +243,25 @@ export const StickmanRig: React.FC<StickmanRigProps> = ({
           />
           <circle cx={rightHand.x} cy={rightHand.y} r={strokeWidth * 0.7} fill={color} />
           {renderProp()}
+          {/* Automatic glowing heart between hands during heart_hands */}
+          {animation === "heart_hands" && prop !== "heart" && (
+            <g transform={`translate(0, ${headY - headRadius - 16}) scale(${1 + Math.sin(frame * 0.25) * 0.15})`}>
+              <path
+                d="M 0 -6 C -8 -20, -22 -4, 0 14 C 22 -4, 8 -20, 0 -6 Z"
+                fill="#FF007F"
+                stroke="#FFFFFF"
+                strokeWidth={2}
+                style={{ filter: "drop-shadow(0px 0px 10px #FF007F)" }}
+              />
+            </g>
+          )}
+          {/* Automatic STOP sign badge during stop */}
+          {animation === "stop" && prop !== "stop_sign" && (
+            <g transform={`translate(${rightHand.x + 10}, ${rightHand.y - 10})`}>
+              <polygon points="-10,-5 -5,-10 5,-10 10,-5 10,5 5,10 -5,10 -10,5" fill="#EF4444" stroke="#FFFFFF" strokeWidth={1.5} />
+              <text x={0} y={3} fill="#FFFFFF" fontSize={6} fontWeight="900" textAnchor="middle" fontFamily="sans-serif">STOP</text>
+            </g>
+          )}
         </g>
       </g>
 

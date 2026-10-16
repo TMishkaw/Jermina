@@ -89,7 +89,7 @@ class MediaValidationEngine:
         if mock_mode or not settings.gemini_api_keys:
             # Deterministic evaluation for tests / mock
             status = ValidationStatus.PASSED if "дефект" not in payload_summary.lower() else ValidationStatus.NEEDS_CORRECTION
-            score = 9.5 if status == ValidationStatus.PASSED else 6.0
+            score = 8.2 if status == ValidationStatus.PASSED else 5.5
             card = ValidationCard(
                 target_type=intent.target_type,
                 status=status,
