@@ -115,7 +115,7 @@ class ScriptGenerator:
         api_key = settings.gemini_api_keys[0]
         if self.rotator:
             try:
-                acquired = await self.rotator.get_active_key(tier=TaskTier.HIGH_VOLUME_ROUTINE)
+                acquired = await self.rotator.get_active_key(tier=TaskTier.ROUTINE)
                 api_key = acquired.key_string
             except Exception as exc:  # noqa: BLE001
                 logger.warning("Failed to get key from rotator for script, fallback: %s", exc)

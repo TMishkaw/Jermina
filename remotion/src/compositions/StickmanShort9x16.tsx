@@ -1,8 +1,12 @@
 import React from "react";
-import { AbsoluteFill, Audio, Sequence, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill, Audio, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { StickmanRig } from "../components/StickmanRig";
 import { KaraokeSubtitles } from "../components/KaraokeSubtitles";
 import { CyberParticlesBackground } from "../components/CyberParticlesBackground";
+import { AudioReactorOrb } from "../components/AudioReactorOrb";
+import { KineticHook } from "../components/KineticHook";
+import { TerminalWindow } from "../components/TerminalWindow";
+import { BreakingTicker } from "../components/BreakingTicker";
 import { AnimationType, EyeExpression, MouthExpression } from "../components/kinematic_presets";
 
 export interface StickmanCue {
@@ -59,21 +63,36 @@ export const StickmanShort9x16: React.FC<{ config?: StickmanShortConfig }> = ({
   const { fps } = useVideoConfig();
 
   // Find active stickman cue
-  const activeCue = config.stickmanCues.find(
-    (c) => frame >= c.fromFrame && frame < c.fromFrame + c.durationInFrames
-  ) || config.stickmanCues[0];
+  const activeCue =
+    config.stickmanCues.find(
+      (c) => frame >= c.fromFrame && frame < c.fromFrame + c.durationInFrames
+    ) || config.stickmanCues[0];
 
-  // Hook animation for first 60 frames (2 seconds)
-  const hookSpring = spring({
-    frame,
-    fps,
-    config: { damping: 12, stiffness: 100 },
-  });
+  // Current audio energy
+  const currentEnergy = config.audioRms && config.audioRms[frame] !== undefined
+    ? config.audioRms[frame]
+    : 0.15;
 
+  // Hook fadeout after 65 frames
   const hookOpacity = interpolate(frame, [50, 65], [1, 0], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
+
+  // Terminal window slide-in and fade
+  const terminalEntrance = spring({
+    frame: frame - 70,
+    fps,
+    config: { damping: 14, stiffness: 120 },
+  });
+
+  const tickerItems = [
+    "JEMINI 2.4.0 ONLINE",
+    "GEMINI 3.8 LIVE WEBSOCKET ACTIVE",
+    "ZERO LATENCY 24kHz AUDIO",
+    "AUTONOMOUS STICKMAN RIG",
+    "PGVECTOR MEMORY INDEXED",
+  ];
 
   return (
     <AbsoluteFill
@@ -84,10 +103,10 @@ export const StickmanShort9x16: React.FC<{ config?: StickmanShortConfig }> = ({
         overflow: "hidden",
       }}
     >
-      {/* 1. Optional Voice Track */}
+      {/* 1. Audio Track */}
       {config.audioSrc && <Audio src={staticFile(config.audioSrc)} />}
 
-      {/* 2. Cyberpunk / Tech Blueprint Grid */}
+      {/* 2. Cyberpunk Grid */}
       <div
         style={{
           position: "absolute",
@@ -102,110 +121,34 @@ export const StickmanShort9x16: React.FC<{ config?: StickmanShortConfig }> = ({
       {/* 3. Floating Cyber Particles */}
       <CyberParticlesBackground accentColor={config.accentColor} count={24} />
 
-      {/* 4. Giant Ambient Radial Glow */}
+      {/* 4. Ambient Radial Glow */}
       <div
         style={{
           position: "absolute",
           top: "45%",
           left: "50%",
           transform: "translate(-50%, -50%)",
-          width: 600,
-          height: 600,
+          width: 700,
+          height: 700,
           borderRadius: "50%",
           background: `radial-gradient(circle, ${config.accentColor}25 0%, transparent 70%)`,
-          filter: "blur(70px)",
+          filter: "blur(80px)",
           pointerEvents: "none",
         }}
       />
 
-      {/* 5. First 2 Seconds: Golden Acting Standard 3s Hook */}
-      {frame < 65 && (
-        <div
-          style={{
-            position: "absolute",
-            top: 220,
-            left: 60,
-            right: 60,
-            textAlign: "center",
-            opacity: hookOpacity,
-            transform: `scale(${hookSpring})`,
-            zIndex: 10,
-          }}
-        >
-          <div
-            style={{
-              display: "inline-block",
-              padding: "12px 28px",
-              background: "rgba(239, 68, 68, 0.9)",
-              color: "#FFF",
-              fontWeight: 900,
-              fontSize: 44,
-              letterSpacing: 2,
-              borderRadius: 16,
-              boxShadow: "0 0 35px rgba(239, 68, 68, 0.7)",
-              textTransform: "uppercase",
-            }}
-          >
-            {config.hookText}
-          </div>
-        </div>
-      )}
-
-      {/* 6. Dynamic 2.5D Stickman Character */}
-      <svg
-        style={{
-          position: "absolute",
-          inset: 0,
-          width: "100%",
-          height: "100%",
-          pointerEvents: "none",
-        }}
-        viewBox="0 0 1080 1920"
-      >
-        <StickmanRig
-          x={540}
-          y={1050}
-          scale={2.2}
-          animation={activeCue.animation}
-          eyeType={activeCue.eyeType}
-          mouthType={activeCue.mouthType}
-          prop={activeCue.prop}
-          color="#FFFFFF"
-          glowColor={config.accentColor}
-          strokeWidth={7}
-        />
-      </svg>
-
-      {/* 7. Kinetic Karaoke Subtitles at bottom center */}
+      {/* 5. Top Brand Pill */}
       <div
         style={{
           position: "absolute",
-          bottom: 240,
-          left: 40,
-          right: 40,
-          zIndex: 20,
-        }}
-      >
-        <KaraokeSubtitles
-          cues={config.subtitles}
-          accentColor={config.accentColor}
-          variant="shorts"
-          style={{ fontSize: 48 }}
-        />
-      </div>
-
-      {/* 8. Modern Glassmorphic Top Brand Pill */}
-      <div
-        style={{
-          position: "absolute",
-          top: 80,
+          top: 60,
           left: "50%",
           transform: "translateX(-50%)",
-          padding: "10px 24px",
+          padding: "10px 28px",
           borderRadius: 9999,
-          background: "rgba(15, 23, 42, 0.75)",
-          backdropFilter: "blur(12px)",
-          border: `1px solid ${config.accentColor}55`,
+          background: "rgba(15, 23, 42, 0.85)",
+          backdropFilter: "blur(14px)",
+          border: `1px solid ${config.accentColor}66`,
           display: "flex",
           alignItems: "center",
           gap: 12,
@@ -218,12 +161,142 @@ export const StickmanShort9x16: React.FC<{ config?: StickmanShortConfig }> = ({
             height: 12,
             borderRadius: "50%",
             background: config.accentColor,
-            boxShadow: `0 0 12px ${config.accentColor}`,
+            boxShadow: `0 0 14px ${config.accentColor}`,
           }}
         />
-        <span style={{ fontSize: 22, fontWeight: 700, letterSpacing: 1.5, color: "#E2E8F0" }}>
+        <span style={{ fontSize: 22, fontWeight: 800, letterSpacing: 2, color: "#E2E8F0" }}>
           JERMINA • AI STUDIO
         </span>
+      </div>
+
+      {/* 6. Audio Reactor Orb (Top Center) */}
+      <div
+        style={{
+          position: "absolute",
+          top: 130,
+          left: "50%",
+          transform: "translateX(-50%)",
+          zIndex: 5,
+        }}
+      >
+        <AudioReactorOrb
+          color={config.accentColor}
+          size={220}
+          label="GEMINI 3.8 LIVE"
+          statusText="24kHz ACTING STREAM"
+          audioEnergy={currentEnergy}
+          isSpeaking={currentEnergy > 0.1}
+        />
+      </div>
+
+      {/* 7. Opening Kinetic Hook (Frames 0-65) */}
+      {frame < 68 && (
+        <div
+          style={{
+            position: "absolute",
+            top: 400,
+            left: 0,
+            right: 0,
+            opacity: hookOpacity,
+            zIndex: 25,
+          }}
+        >
+          <KineticHook
+            primaryText="СТОП!"
+            accentText={config.hookText}
+            badgeText="AI VIRAL BREAKTHROUGH"
+            accentColor={config.accentColor}
+          />
+        </div>
+      )}
+
+      {/* 8. Cyber Terminal Window (Frames 70-220) */}
+      {frame >= 70 && frame < 225 && (
+        <div
+          style={{
+            position: "absolute",
+            top: 420,
+            left: 80,
+            right: 80,
+            transform: `scale(${Math.min(1, terminalEntrance)}) translateY(${(1 - Math.min(1, terminalEntrance)) * 50}px)`,
+            opacity: Math.min(1, terminalEntrance),
+            zIndex: 15,
+          }}
+        >
+          <TerminalWindow
+            title="jemini-orchestrator // stream"
+            command="python -m jemini.cli render --live"
+            outputLines={[
+              "✓ KeyRotator acquired: key_01 (Free Hot Standby)",
+              "✓ Gemini 3.8 Live WebSocket connected (24kHz PCM)",
+              "✓ Stickman Rig: kinematic lip-sync synced",
+              "✓ Procedural SFX: whoosh, hit, chime injected",
+            ]}
+            accentColor={config.accentColor}
+          />
+        </div>
+      )}
+
+      {/* 9. Dynamic 2.5D Stickman Character */}
+      <svg
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          pointerEvents: "none",
+          zIndex: 10,
+        }}
+        viewBox="0 0 1080 1920"
+      >
+        <StickmanRig
+          x={540}
+          y={1180}
+          scale={2.1}
+          animation={activeCue.animation}
+          eyeType={activeCue.eyeType}
+          mouthType={activeCue.mouthType}
+          prop={activeCue.prop}
+          color="#FFFFFF"
+          glowColor={config.accentColor}
+          strokeWidth={7}
+        />
+      </svg>
+
+      {/* 10. Kinetic Karaoke Subtitles */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: 220,
+          left: 40,
+          right: 40,
+          zIndex: 25,
+        }}
+      >
+        <KaraokeSubtitles
+          cues={config.subtitles}
+          accentColor={config.accentColor}
+          variant="shorts"
+          style={{ fontSize: 46 }}
+        />
+      </div>
+
+      {/* 11. Breaking Live Ticker (Bottom Bar) */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          zIndex: 35,
+        }}
+      >
+        <BreakingTicker
+          items={tickerItems}
+          speed={4}
+          backgroundColor="#080A10"
+          textColor="#F8FAFC"
+        />
       </div>
     </AbsoluteFill>
   );

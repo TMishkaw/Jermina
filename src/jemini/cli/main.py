@@ -9,6 +9,7 @@ import argparse
 import asyncio
 import json
 import logging
+import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -28,6 +29,13 @@ from jemini.validation.validator import MediaValidationEngine
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("jemini_cli")
+
+
+def sanitize_filename(name: str) -> str:
+    """Removes all forbidden Windows/POSIX characters from output filename."""
+    cleaned = re.sub(r'[\\/*?:"<>|]', "", name)
+    cleaned = re.sub(r"\s+", "_", cleaned.strip())
+    return cleaned[:40] or "jemini_short"
 
 
 def _init_rotator() -> APIKeyRotator:
@@ -95,7 +103,7 @@ async def run_e2e_render(
 
     # 3. Remotion Video Rendering
     renderer = RemotionRenderer()
-    video_output_path = out_dir / f"{Path(short_script.title).stem[:30].strip() or 'jemini_short'}.mp4"
+    video_output_path = out_dir / f"{sanitize_filename(short_script.title)}.mp4"
 
     render_opts = RenderOptions(
         concurrency=4,

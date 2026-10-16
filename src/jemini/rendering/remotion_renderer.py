@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 class RenderOptions(BaseModel):
     composition_id: str = "StickmanShort9x16"
     concurrency: int = Field(default=PipelineLimits.REMOTION.default_concurrency_workers)
-    timeout_seconds: int = 180
+    timeout_seconds: int = 360
     dry_run: bool = False
 
 
@@ -136,26 +136,17 @@ class RemotionRenderer:
             out_file.name,
         )
 
-        # Execute Remotion render using npx or npm
-        cmd = [
-            "npx",
-            "remotion",
-            "render",
-            "src/index.ts",
-            opts.composition_id,
-            str(out_file),
-            f"--props={props_file}",
-            f"--concurrency={opts.concurrency}",
-        ]
+        # Execute Remotion render using shell
+        cmd_str = (
+            f'npx remotion render src/index.ts {opts.composition_id} '
+            f'"{out_file}" --props="{props_file}" --concurrency={opts.concurrency}'
+        )
 
-        # On Windows, shell=True or finding npx via cmd is needed
-        proc = await asyncio.create_subprocess_exec(
-            cmd[0],
-            *cmd[1:],
+        proc = await asyncio.create_subprocess_shell(
+            cmd_str,
             cwd=str(self.remotion_dir),
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            shell=True,
         )
 
         try:
