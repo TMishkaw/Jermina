@@ -36,9 +36,11 @@ class LiveVideoReviewer:
         self,
         rotator: APIKeyRotator | None = None,
         model_name: str = "gemini-3.8-live",
+        thinking_level: str = "high",
     ):
         self.rotator = rotator
         self.model_name = model_name
+        self.thinking_level = thinking_level
         self.ffmpeg_bin = settings.resolve_ffmpeg_path()
 
     async def _extract_frames_and_audio(
@@ -359,11 +361,14 @@ class LiveVideoReviewer:
             client = genai.Client(api_key=api_key)
             system_inst = self._build_system_instruction(intent)
 
+            thinking_cfg = types.ThinkingConfig(thinking_level=self.thinking_level) if self.thinking_level else None
+
             config = types.LiveConnectConfig(
                 response_modalities=[types.Modality.AUDIO],
                 output_audio_transcription=types.AudioTranscriptionConfig(),
                 media_resolution=types.MediaResolution.MEDIA_RESOLUTION_LOW,
                 system_instruction=types.Content(parts=[types.Part(text=system_inst)]),
+                thinking_config=thinking_cfg,
             )
 
 

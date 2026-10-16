@@ -742,6 +742,81 @@ async def handle_youtube_verify(channel_id: str, count: int, mock_mode: bool) ->
     print("=" * 85 + "\n")
 
 
+async def handle_eval_element(
+    element_name: str,
+    intent: str,
+    spec_json: str | None,
+    mock_mode: bool = False,
+) -> None:
+    """Evaluates an isolated movement/element against author intent."""
+    from jemini.validation.ab_testing import MovementValidator
+
+    spec = json.loads(spec_json) if spec_json else {"element": element_name}
+    rotator = _init_rotator()
+    validator = MovementValidator(rotator=rotator)
+    res = await validator.evaluate_element(
+        element_name=element_name,
+        intent_description=intent,
+        element_spec=spec,
+        mock_mode=mock_mode,
+    )
+    print("\n" + "=" * 80)
+    print(f"       MOVEMENT ELEMENT EVALUATION: {element_name.upper()}")
+    print("=" * 80)
+    print(f"  Intent:              {res.intent_description}")
+    print(f"  Congruence:          {'✓ PASSED' if res.is_congruent else '✗ FAILED'}")
+    print(f"  Score:               {res.score:.1f} / 10.0")
+    print(f"  Silhouette Clarity:  {res.silhouette_clarity}")
+    print(f"  Semantic Accuracy:   {res.semantic_accuracy}")
+    print("  Strengths:")
+    for s in res.strengths:
+        print(f"    • {s}")
+    if res.weaknesses:
+        print("  Weaknesses:")
+        for w in res.weaknesses:
+            print(f"    • {w}")
+    print(f"  Evolution Vector:    {res.evolution_direction}")
+    print("=" * 80 + "\n")
+
+
+async def handle_ab_test(
+    element_name: str,
+    intent: str,
+    variant_a_json: str | None,
+    variant_b_json: str | None,
+    consecutive: int = 2,
+    max_rounds: int = 5,
+    mock_mode: bool = False,
+) -> None:
+    """Runs autonomous A/B testing until a variant wins 2 consecutive times."""
+    from jemini.validation.ab_testing import MovementABTester
+
+    var_a = json.loads(variant_a_json) if variant_a_json else {
+        "variant": "A",
+        "arm_angle": -120,
+        "elbow_angle": 60,
+        "bounce_speed": 2.0,
+    }
+    var_b = json.loads(variant_b_json) if variant_b_json else {
+        "variant": "B",
+        "arm_angle": -135,
+        "elbow_angle": 80,
+        "bounce_speed": 2.5,
+    }
+    rotator = _init_rotator()
+    tester = MovementABTester(rotator=rotator)
+    result = await tester.run_ab_convergence_test(
+        element_name=element_name,
+        intent_description=intent,
+        variant_a=var_a,
+        variant_b=var_b,
+        consecutive_target=consecutive,
+        max_rounds=max_rounds,
+        mock_mode=mock_mode,
+    )
+    print("\n" + result.summarize() + "\n")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Jemini Autonomous Video Production CLI")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -827,6 +902,23 @@ def main():
     yt_verify_parser.add_argument("--channel-id", type=str, default="UC1ol6l3KL3sgmLPiwQy2QTA", help="YouTube Channel ID")
     yt_verify_parser.add_argument("--count", type=int, default=5, help="Number of recent uploads to audit")
     yt_verify_parser.add_argument("--mock-mode", action="store_true", help="Run audit in mock mode")
+
+    # Subcommand: eval-element
+    eval_elem_parser = subparsers.add_parser("eval-element", help="Evaluate an isolated movement or visual element against intent")
+    eval_elem_parser.add_argument("--element", type=str, required=True, help="Name of element or animation preset")
+    eval_elem_parser.add_argument("--intent", type=str, required=True, help="Intended semantic goal or emotion")
+    eval_elem_parser.add_argument("--spec", type=str, default=None, help="JSON string with kinematic parameters")
+    eval_elem_parser.add_argument("--mock-mode", action="store_true", help="Run evaluation in offline mock mode")
+
+    # Subcommand: ab-test
+    ab_parser = subparsers.add_parser("ab-test", help="Run iterative A/B testing until a variant wins 2 consecutive rounds")
+    ab_parser.add_argument("--element", type=str, required=True, help="Element or animation name")
+    ab_parser.add_argument("--intent", type=str, required=True, help="Target artistic intent or emotion")
+    ab_parser.add_argument("--variant-a", type=str, default=None, help="JSON string for Variant A spec")
+    ab_parser.add_argument("--variant-b", type=str, default=None, help="JSON string for Variant B spec")
+    ab_parser.add_argument("--consecutive", type=int, default=2, help="Consecutive wins needed to converge (default: 2)")
+    ab_parser.add_argument("--max-rounds", type=int, default=5, help="Maximum A/B comparison rounds (default: 5)")
+    ab_parser.add_argument("--mock-mode", action="store_true", help="Run test in offline mock mode")
 
     # Subcommand: test-readiness
     subparsers.add_parser("test-readiness", help="Run pre-flight Matrix Readiness Suite for QA handoff")
@@ -928,6 +1020,27 @@ def main():
                 reject_id=args.reject,
                 publish_youtube=args.publish_youtube,
                 publish_tiktok=args.publish_tiktok,
+                mock_mode=args.mock_mode,
+            )
+        )
+    elif args.command == "eval-element":
+        asyncio.run(
+            handle_eval_element(
+                element_name=args.element,
+                intent=args.intent,
+                spec_json=args.spec,
+                mock_mode=args.mock_mode,
+            )
+        )
+    elif args.command == "ab-test":
+        asyncio.run(
+            handle_ab_test(
+                element_name=args.element,
+                intent=args.intent,
+                variant_a_json=args.variant_a,
+                variant_b_json=args.variant_b,
+                consecutive=args.consecutive,
+                max_rounds=args.max_rounds,
                 mock_mode=args.mock_mode,
             )
         )
