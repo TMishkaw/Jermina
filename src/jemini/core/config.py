@@ -1,6 +1,6 @@
-from typing import List, Optional
-from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
 
 class JeminiSettings(BaseSettings):
     """Central configuration for Jemini core engine."""
@@ -10,12 +10,12 @@ class JeminiSettings(BaseSettings):
     
     # Database
     database_url: str = Field(
-        default="postgresql+asyncpg://postgres:postgres@localhost:5432/jemini",
+        default="postgresql+asyncpg://postgres:postgres@127.0.0.1:5433/jemini",
         alias="DATABASE_URL"
     )
     
     # Gemini API keys pool
-    gemini_api_keys: List[str] = Field(default_factory=list, alias="GEMINI_API_KEYS")
+    gemini_api_keys: list[str] = Field(default_factory=list, alias="GEMINI_API_KEYS")
     gemini_primary_model: str = Field(default="gemini-2.5-flash", alias="GEMINI_PRIMARY_MODEL")
     gemini_live_model: str = Field(default="gemini-3.8-live", alias="GEMINI_LIVE_MODEL")
     

@@ -1,8 +1,9 @@
 """Gemini 3.8 Live API Bidirectional Streaming Client (WebSocket 24kHz PCM)."""
 
-import asyncio
-from typing import Optional, AsyncGenerator
+from collections.abc import AsyncGenerator
+
 from jemini.rotator.rotator import APIKeyRotator
+
 
 class LiveSessionClient:
     """Manages real-time bidirectional audio/video session with Gemini 3.8 Live API."""
@@ -11,7 +12,7 @@ class LiveSessionClient:
         self.rotator = rotator
         self.model = model
         self.is_connected = False
-        self._current_key: Optional[str] = None
+        self._current_key: str | None = None
 
     async def connect(self):
         """Establish bidirectional Live API connection with Hot Standby fallback."""
@@ -37,7 +38,6 @@ class LiveSessionClient:
         if not self.is_connected:
             await self.connect()
         # Audio streaming logic over websocket
-        pass
 
     async def receive_stream(self) -> AsyncGenerator[bytes, None]:
         """Receive synthesized 24kHz PCM audio chunks or responses from Live API."""

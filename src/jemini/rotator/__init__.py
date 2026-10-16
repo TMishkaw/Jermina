@@ -1,3 +1,10 @@
-from jemini.rotator.rotator import APIKeyRotator, KeyState
+from jemini.rotator.rotator import APIKeyRotator, KeyAcquireResult, KeyMetadata
+from jemini.rotator.router import ModelRegistry, TaskTier
 
-__all__ = ["APIKeyRotator", "KeyState"]
+__all__ = [
+    "APIKeyRotator",
+    "KeyAcquireResult",
+    "KeyMetadata",
+    "ModelRegistry",
+    "TaskTier",
+]

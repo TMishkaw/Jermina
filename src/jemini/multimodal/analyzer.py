@@ -1,7 +1,9 @@
 """Multimodal Analyzer for video and audio content inspection."""
 
-from typing import Dict, Any, Optional
+from typing import Any
+
 from jemini.rotator.rotator import APIKeyRotator
+
 
 class MultimodalAnalyzer:
     """Performs deep review, frame analysis, and audio evaluation of generated media."""
@@ -9,7 +11,7 @@ class MultimodalAnalyzer:
     def __init__(self, rotator: APIKeyRotator):
         self.rotator = rotator
 
-    async def analyze_video(self, video_path: str, prompt: str) -> Dict[str, Any]:
+    async def analyze_video(self, video_path: str, prompt: str) -> dict[str, Any]:
         """Analyze video frames and audio track against requested prompt."""
         key = await self.rotator.get_active_key()
         return {

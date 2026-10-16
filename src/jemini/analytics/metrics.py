@@ -1,8 +1,9 @@
 """Metrics collection and performance tracking for published content."""
 
-from typing import Dict, Any, List
-from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, timezone
+
+from pydantic import BaseModel, Field
+
 
 class VideoMetrics(BaseModel):
     video_id: str
@@ -11,13 +12,13 @@ class VideoMetrics(BaseModel):
     likes: int = 0
     comments: int = 0
     retention_rate: float = 0.0
-    recorded_at: datetime = datetime.utcnow()
+    recorded_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class MetricsCollector:
     """Collects engagement metrics from YouTube and TikTok."""
 
     def __init__(self):
-        self._history: List[VideoMetrics] = []
+        self._history: list[VideoMetrics] = []
 
     async def fetch_metrics(self, video_id: str, platform: str) -> VideoMetrics:
         metrics = VideoMetrics(
@@ -31,7 +32,7 @@ class MetricsCollector:
         self._history.append(metrics)
         return metrics
 
-    def calculate_baseline(self, min_samples: int = 5) -> Dict[str, float]:
+    def calculate_baseline(self, min_samples: int = 5) -> dict[str, float]:
         if not self._history:
             return {"avg_views": 0.0, "avg_retention": 0.0}
         avg_views = sum(m.views for m in self._history) / len(self._history)

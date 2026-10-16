@@ -7,8 +7,10 @@ Layers:
 """
 
 from enum import Enum
-from typing import Dict, Any, Optional
+from typing import Any
+
 from pydantic import BaseModel, Field
+
 
 class ContextLayerType(str, Enum):
     CORE = "core"
@@ -25,22 +27,22 @@ class ChannelProfile(BaseModel):
     niche_keywords: list[str] = Field(default_factory=list)
     video_language: str = "uk"
     constraints: list[str] = Field(default_factory=list)
-    custom_settings: Dict[str, Any] = Field(default_factory=dict)
+    custom_settings: dict[str, Any] = Field(default_factory=dict)
 
 class ContextLayer(BaseModel):
     layer_type: ContextLayerType
     name: str
     version: str = "1.0.0"
     content: str
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 class ContextEngine:
     """Combines and compiles the cascading context layers into an active prompt/instruction."""
     
-    def __init__(self, core_layer: Optional[ContextLayer] = None):
+    def __init__(self, core_layer: ContextLayer | None = None):
         self.core_layer = core_layer or self._default_core_layer()
-        self.domain_layers: Dict[str, ContextLayer] = {}
-        self.channel_profile: Optional[ChannelProfile] = None
+        self.domain_layers: dict[str, ContextLayer] = {}
+        self.channel_profile: ChannelProfile | None = None
 
     def _default_core_layer(self) -> ContextLayer:
         return ContextLayer(
@@ -60,7 +62,7 @@ class ContextEngine:
     def set_channel_profile(self, profile: ChannelProfile) -> None:
         self.channel_profile = profile
 
-    def compile_system_instruction(self, domain_name: Optional[str] = None) -> str:
+    def compile_system_instruction(self, domain_name: str | None = None) -> str:
         """Compile cascading context into unified system instruction."""
         sections = [
             "=== [LAYER 1: CORE ENGINE INVARIANTS] ===",

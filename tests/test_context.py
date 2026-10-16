@@ -1,5 +1,5 @@
-import pytest
-from jemini.core.context import ContextEngine, ContextLayer, ContextLayerType, ChannelProfile
+from jemini.core.context import ChannelProfile, ContextEngine, ContextLayer, ContextLayerType
+
 
 def test_context_engine_layer_compilation():
     engine = ContextEngine()

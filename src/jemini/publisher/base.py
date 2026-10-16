@@ -1,8 +1,9 @@
 """Base publisher interface."""
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional
+
 from pydantic import BaseModel
+
 
 class PublicationPayload(BaseModel):
     video_path: str
@@ -15,9 +16,9 @@ class PublicationPayload(BaseModel):
 class PublicationResult(BaseModel):
     success: bool
     platform: str
-    remote_id: Optional[str] = None
-    url: Optional[str] = None
-    error: Optional[str] = None
+    remote_id: str | None = None
+    url: str | None = None
+    error: str | None = None
 
 class BasePublisher(ABC):
     @abstractmethod

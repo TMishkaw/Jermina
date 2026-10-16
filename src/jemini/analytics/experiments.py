@@ -1,31 +1,34 @@
 """Controlled experimentation and autonomous channel evolution."""
 
-from typing import Dict, Any, List, Optional
+from typing import Any
+
 from pydantic import BaseModel
+
 from jemini.core.context import ChannelProfile
+
 
 class ExperimentHypothesis(BaseModel):
     id: str
     name: str
     target_metric: str = "retention_rate"
     deviation_description: str
-    proposed_changes: Dict[str, Any]
+    proposed_changes: dict[str, Any]
     is_active: bool = True
-    result_score: Optional[float] = None
-    adopted: Optional[bool] = None
+    result_score: float | None = None
+    adopted: bool | None = None
 
 class EvolutionLoop:
     """Manages channel evolution by balancing fixed core theme with controlled deviations."""
 
     def __init__(self, profile: ChannelProfile):
         self.profile = profile
-        self.active_experiments: List[ExperimentHypothesis] = []
+        self.active_experiments: list[ExperimentHypothesis] = []
 
     def propose_experiment(
         self,
         name: str,
         deviation: str,
-        changes: Dict[str, Any]
+        changes: dict[str, Any]
     ) -> ExperimentHypothesis:
         exp = ExperimentHypothesis(
             id=f"exp_{len(self.active_experiments) + 1}",

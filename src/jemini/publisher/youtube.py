@@ -2,6 +2,7 @@
 
 from jemini.publisher.base import BasePublisher, PublicationPayload, PublicationResult
 
+
 class YouTubePublisher(BasePublisher):
     """Handles uploads to YouTube and YouTube Shorts via official API."""
 
@@ -10,7 +11,6 @@ class YouTubePublisher(BasePublisher):
 
     async def publish(self, payload: PublicationPayload) -> PublicationResult:
         # Upload workflow: resumable upload protocol
-        video_kind = "Shorts" if payload.is_short else "Video"
         return PublicationResult(
             success=True,
             platform="youtube",

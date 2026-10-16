@@ -1,8 +1,9 @@
 """Agent self-improvement and feature gap escalation engine."""
 
-from typing import List, Dict, Any
-from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, timezone
+
+from pydantic import BaseModel, Field
+
 
 class FeatureGapReport(BaseModel):
     id: str
@@ -10,14 +11,14 @@ class FeatureGapReport(BaseModel):
     missing_capability: str
     impact_description: str
     suggested_solution: str
-    created_at: datetime = datetime.utcnow()
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     github_issue_url: str | None = None
 
 class EscalationManager:
     """Detects unfulfilled capabilities during daily workflows and prepares GitHub Issues / PR proposals."""
 
     def __init__(self):
-        self.reports: List[FeatureGapReport] = []
+        self.reports: list[FeatureGapReport] = []
 
     def record_feature_gap(
         self,

@@ -2,6 +2,7 @@
 
 from jemini.publisher.base import BasePublisher, PublicationPayload, PublicationResult
 
+
 class TikTokPublisher(BasePublisher):
     """Handles publishing vertical video content to TikTok."""
 

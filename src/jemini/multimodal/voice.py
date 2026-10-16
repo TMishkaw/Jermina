@@ -8,8 +8,7 @@ Voices:
 """
 
 from enum import Enum
-from typing import Optional
-from pydantic import BaseModel
+
 
 class VoiceArchetype(str, Enum):
     ZEPHYR = "Zephyr"
@@ -51,7 +50,7 @@ class VoiceProducer:
     def prepare_voice_payload(
         self,
         text: str,
-        voice: Optional[VoiceArchetype] = None,
+        voice: VoiceArchetype | None = None,
         emotion: str = "viral drive",
     ) -> dict:
         chosen_voice = voice or self.default_voice

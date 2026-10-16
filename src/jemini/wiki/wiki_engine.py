@@ -10,38 +10,53 @@ class WikiEngine:
     <meta charset="UTF-8">
     <title>Jemini Autonomous Wiki & Knowledge Base</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 2rem; }
-        .container { max-width: 900px; margin: 0 auto; background: #1e293b; padding: 2rem; border-radius: 12px; border: 1px solid #334155; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0b1120; color: #f8fafc; margin: 0; padding: 2rem; }
+        .container { max-width: 960px; margin: 0 auto; background: #1e293b; padding: 2.5rem; border-radius: 14px; border: 1px solid #334155; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
         h1 { color: #38bdf8; border-bottom: 2px solid #334155; padding-bottom: 0.5rem; }
-        h2 { color: #818cf8; margin-top: 1.5rem; }
-        .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 9999px; font-size: 0.8rem; background: #0284c7; color: white; margin-right: 0.5rem; }
-        pre { background: #0b0f19; padding: 1rem; border-radius: 8px; overflow-x: auto; color: #a5f3fc; }
-        ul { line-height: 1.7; }
-        a { color: #38bdf8; text-decoration: none; }
+        h2 { color: #818cf8; margin-top: 1.8rem; }
+        h3 { color: #34d399; }
+        .badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.8rem; background: #0284c7; color: white; margin-right: 0.5rem; font-weight: 600; }
+        .badge-green { background: #059669; }
+        .badge-purple { background: #7c3aed; }
+        pre { background: #020617; padding: 1rem; border-radius: 8px; overflow-x: auto; color: #a5f3fc; border: 1px solid #1e293b; }
+        ul { line-height: 1.8; }
+        a { color: #38bdf8; text-decoration: none; font-weight: 500; }
         a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🌌 Jemini Architecture & Wiki Portal</h1>
-        <p><span class="badge">dev</span> <span class="badge">v0.1.0</span> <span class="badge">PostgreSQL + pgvector</span> <span class="badge">Gemini 3.8 Live</span></p>
+        <p>
+            <span class="badge">dev</span>
+            <span class="badge badge-green">v0.2.0</span>
+            <span class="badge badge-purple">Gemini 3.8 Live</span>
+            <span class="badge">PostgreSQL + pgvector</span>
+        </p>
         
-        <h2>1. Дворівнева ізоляція (Git Flow)</h2>
+        <h2>1. Підсистема 1: Key Rotator & Quota Manager</h2>
         <ul>
-            <li><strong>jemini-core:</strong> Гілка <code>dev</code> (активна розробка), середовище <code>Antigravity</code> (тестування, фіксація Issues), гілка <code>main/release</code> (стабільна продакшен-версія).</li>
-            <li><strong>Контент-проєкти:</strong> Автономні канали, що підключають <code>jemini</code> як версіоновану залежність без прямих правок у коді бібліотеки.</li>
+            <li><strong>Пріоритет Free-Tier:</strong> Система завжди спочатку вичерпує безкоштовні квоти. Платні ключі (Paid) підключаються лише як резерв або для критичних важких завдань.</li>
+            <li><strong>Model-Specific Cooldown:</strong> Помилка 429 блокує виключно пару [ключ + модель]. Якщо ключ вичерпав ліміт важкої моделі, він залишається доступним для легких моделей.</li>
+            <li><strong>Hot Standby:</strong> Миттєве безшовне перемикання на резервний ключ при отриманні 429 без обриву стримів чи завдань.</li>
         </ul>
 
-        <h2>2. П'ять базових модулів</h2>
+        <h2>2. Підсистема 2: Універсальний Gemini Live API Engine</h2>
         <ul>
-            <li><strong>Модуль 1 (Brain & Context):</strong> Тришарова ієрархія (Core Invariants &rarr; Domain Knowledge &rarr; Channel Specific).</li>
-            <li><strong>Модуль 2 (Rotator & Quotas):</strong> Пул API-ключів, автоматична обробка 429 та Hot Standby без розриву з'єднань.</li>
-            <li><strong>Модуль 3 (Multimodal & Voice):</strong> Live API 3.8 WebSocket (24kHz PCM), Golden Acting Standard (Zephyr, Aoede, Fenrir, Kore).</li>
-            <li><strong>Модуль 4 (Publisher):</strong> Таргетована публікація на YouTube (Shorts + Video) та TikTok.</li>
-            <li><strong>Модуль 5 (Analytics & Evolution):</strong> Метрики залученості, контрольовані експерименти та ескалація PR/Issues.</li>
+            <li><strong>Сценарій А (Video Intelligence):</strong> Мультимодальний аналіз фреймів та аудіо з генерацією структурованого JSON-звіту (хук, темп, акторські стандарти).</li>
+            <li><strong>Сценарій Б (Live Stream Vision):</strong> Візуальний парсер прямих трансляцій (TikTok/YouTube) — детекція подарунків, коментарів, лайків, дій глядачів для майбутніх батлів.</li>
+            <li><strong>Сценарій В (AI Voice TTS):</strong> Акторське втілення мовлення (Zephyr, Aoede, Fenrir, Kore) за еталонним Golden Acting Standard (vocal fry, живий сміх, шепіт).</li>
         </ul>
 
-        <h2>3. Посилання та API</h2>
+        <h2>3. Global Quality Gates & Engineering Standards</h2>
+        <ul>
+            <li><strong>Сувора типізація:</strong> Повна статична типізація для всіх моделей та функцій.</li>
+            <li><strong>Піраміда тестування:</strong> 100% покриття критичних шляхів (Unit + Integration + Fault Injection для симуляції 429).</li>
+            <li><strong>Graceful Degradation:</strong> Збій другорядного модуля не зупиняє основний конвеєр.</li>
+            <li><strong>Векторна пам'ять (pgvector):</strong> Накопичення досвіду експериментів, помилок парсингу та патернів успішних сценаріїв.</li>
+        </ul>
+
+        <h2>4. Інтерактивні посилання</h2>
         <ul>
             <li><a href="/docs">Інтерактивна OpenAPI документація (Swagger UI)</a></li>
             <li><a href="/redoc">ReDoc документація</a></li>
