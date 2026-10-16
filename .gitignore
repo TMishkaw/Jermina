@@ -49,5 +49,10 @@ temp/
 output/
 .trash/
 
+# Secrets and local configurations
+config/
+*.keys.json
+keys.json
+
 # Antigravity artifacts
 .system_generated/

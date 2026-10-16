@@ -6,6 +6,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
+from jemini.core.config import settings
 from jemini.core.context import ChannelProfile
 from jemini.multimodal.live_engine import (
     LiveStreamVisionEvent,
@@ -28,8 +29,31 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
+import json
+from pathlib import Path
+
 # Global runtime singletons
 rotator = APIKeyRotator()
+
+# Auto-seed from config/api_keys.json or settings
+_keys_file = Path("config/api_keys.json")
+if _keys_file.exists():
+    try:
+        with open(_keys_file, "r", encoding="utf-8") as _f:
+            _loaded_keys = json.load(_f)
+            for _item in _loaded_keys:
+                rotator.register_key(
+                    key_string=_item.get("key", ""),
+                    engine=_item.get("engine", "gemini"),
+                    key_type=KeyType(_item.get("key_type", "free")),
+                    models_mapping={"name": _item.get("name", "unnamed")}
+                )
+    except (OSError, json.JSONDecodeError):
+        pass
+elif settings.gemini_api_keys:
+    for _k in settings.gemini_api_keys:
+        rotator.register_key(key_string=_k, key_type=KeyType.FREE)
+
 live_engine = UniversalLiveEngine(rotator)
 wiki = WikiEngine()
 channels: dict[str, ChannelProfile] = {}
