@@ -2,7 +2,7 @@
 
 Layers:
 1. Core Base Layer: Universal system rules, commands, invariant guidelines.
-2. Domain Knowledge Layer: Domain vertical expertise (scriptwriting, acting, coding).
+2. Domain Knowledge Layer: Domain vertical expertise (development brain, scriptwriting, acting, coding).
 3. Channel Instance Layer: Channel profile, tone of voice, goals, constraints, baseline metrics.
 """
 
@@ -36,13 +36,64 @@ class ContextLayer(BaseModel):
     content: str
     metadata: dict[str, Any] = Field(default_factory=dict)
 
+class DevelopmentBrain:
+    """Pre-compiled Domain Knowledge Layer embedding all engineering standards of Jemini."""
+
+    @classmethod
+    def get_layer(cls) -> ContextLayer:
+        content = (
+            "### [DEVELOPMENT BRAIN & ENGINEERING LAW]\n"
+            "1. SDK & API DISCIPLINE:\n"
+            "   - Always use official modern SDK: 'google-genai' for Python ('from google import genai') and '@google/genai' for TS/JS.\n"
+            "   - NEVER use deprecated SDKs: 'google-generativeai' or '@google/generative-ai'.\n"
+            "   - Prefer Interactions API ('client.interactions.create') for multi-turn autonomous agents.\n\n"
+            "2. MODEL ROUTING & FREE-TIER DISCIPLINE:\n"
+            "   - High-Volume / Routine: 'gemini-3.1-flash-lite' or 'gemini-3.5-flash-lite' (500 RPD, 15 RPM).\n"
+            "   - Live API & Speech Synthesis: 'gemini-3.8-live' (Unlimited RPM/RPD, 65K TPM).\n"
+            "   - Complex Reasoning & Planning: 'gemini-3.8-flash' or 'gemini-3.1-pro-preview'.\n"
+            "   - Vector Memory Embeddings: 'gemini-embedding-2-preview' (1K RPD, 100 RPM) into pgvector.\n"
+            "   - NEVER use shut-down or deprecated models: gemini-2.0-flash, gemini-3-pro-preview, gemini-1.5-*.\n\n"
+            "3. GEMINI LIVE API TECHNICAL SPECIFICATIONS:\n"
+            "   - Audio input: 16-bit raw PCM, 16 kHz, little-endian, mono.\n"
+            "   - Audio output: 16-bit raw PCM, 24 kHz, little-endian, mono.\n"
+            "   - Vision input: JPEG frames at <= 1 FPS.\n"
+            "   - Protocol: Stateful WSS WebSocket with Barge-In, Affective Dialog, and Asynchronous Tool Calling.\n\n"
+            "4. KEY ROTATOR & HOT STANDBY:\n"
+            "   - Free-tier priority: always consume free keys first, keep paid keys in reserve.\n"
+            "   - Model-specific cooldown: 429 locks strictly the [key + model] pair without blocking light models.\n"
+            "   - Seamless Hot Standby failover during live streams without disconnecting sessions.\n\n"
+            "5. GOLDEN ACTING STANDARD FOR VOICE:\n"
+            "   - Zephyr: blogger drive, laughter, drama.\n"
+            "   - Aoede: vocal fry, whisper, seductive/intimate depth.\n"
+            "   - Fenrir: brutal bass, cyborg/robotics.\n"
+            "   - Kore: timid android, fragile bright timbre.\n"
+            "   - Ban synthetic 'ha-ha' — produce organic chuckles, breath catches, and sighs through words.\n\n"
+            "6. QUALITY GATES & SYSTEM ARCHITECTURE:\n"
+            "   - Strict Typing (Pydantic v2, MyPy), zero hardcoded secrets (.env / git-ignored).\n"
+            "   - Git Flow: dev branch for active work, Antigravity for testing (issues only), main/release for stable releases.\n"
+            "   - Testing Pyramid: 100% pass on unit tests + fault injection for 429 and network failures.\n"
+            "   - Graceful degradation and structured JSON logging in PostgreSQL.\n"
+            "   - MCP servers: postgres-jemini (DB inspection) and github (autonomous PR/Issue workflows).\n"
+            "   - Custom Subagents: isolated Git worktrees ('branch' mode) in .agents/agents/."
+        )
+        return ContextLayer(
+            layer_type=ContextLayerType.DOMAIN,
+            name="development_brain",
+            version="2.0.0",
+            content=content,
+            metadata={"domain": "engineering_and_gemini_architecture"}
+        )
+
 class ContextEngine:
-    """Combines and compiles the cascading context layers into an active prompt/instruction."""
-    
-    def __init__(self, core_layer: ContextLayer | None = None):
+    """Combines and compiles cascading context layers into an active instruction."""
+
+    def __init__(self, core_layer: ContextLayer | None = None, auto_load_dev_brain: bool = True):
         self.core_layer = core_layer or self._default_core_layer()
         self.domain_layers: dict[str, ContextLayer] = {}
         self.channel_profile: ChannelProfile | None = None
+
+        if auto_load_dev_brain:
+            self.load_development_brain()
 
     def _default_core_layer(self) -> ContextLayer:
         return ContextLayer(
@@ -56,25 +107,31 @@ class ContextEngine:
             )
         )
 
+    def load_development_brain(self) -> None:
+        """Loads all engineering standards, model catalogs, and live specs into domain context."""
+        dev_layer = DevelopmentBrain.get_layer()
+        self.register_domain_layer(dev_layer)
+
     def register_domain_layer(self, layer: ContextLayer) -> None:
         self.domain_layers[layer.name] = layer
 
     def set_channel_profile(self, profile: ChannelProfile) -> None:
         self.channel_profile = profile
 
-    def compile_system_instruction(self, domain_name: str | None = None) -> str:
+    def compile_system_instruction(self, domain_name: str | None = "development_brain") -> str:
         """Compile cascading context into unified system instruction."""
         sections = [
             "=== [LAYER 1: CORE ENGINE INVARIANTS] ===",
             self.core_layer.content
         ]
-        
-        if domain_name and domain_name in self.domain_layers:
+
+        target_domain = domain_name if domain_name in self.domain_layers else None
+        if target_domain:
             sections.extend([
-                f"\n=== [LAYER 2: DOMAIN KNOWLEDGE ({domain_name})] ===",
-                self.domain_layers[domain_name].content
+                f"\n=== [LAYER 2: DOMAIN KNOWLEDGE ({target_domain})] ===",
+                self.domain_layers[target_domain].content
             ])
-            
+
         if self.channel_profile:
             profile_summary = (
                 f"Channel: {self.channel_profile.channel_name} (ID: {self.channel_profile.channel_id})\n"
@@ -87,5 +144,5 @@ class ContextEngine:
                 "\n=== [LAYER 3: CHANNEL INSTANCE CONTEXT] ===",
                 profile_summary
             ])
-            
+
         return "\n\n".join(sections)
