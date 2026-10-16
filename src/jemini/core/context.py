@@ -97,12 +97,18 @@ class DevelopmentBrain:
             "   - Intent Injection: Every artifact is checked against expected duration, emotion, constraints, and hook retention.\n"
             "   - Typed Validation Cards: Output strictly parsed into ValidationCard (overall_score, issues, recommendations).\n"
             "   - Autonomous Correction Loop: NEEDS_CORRECTION triggers automatic self-correction prompts up to 3 iterations.\n"
-            "   - Root-Cause Resolution: Recurring validation failures demand systemic prompt/contract fixes rather than endless retries."
+            "   - Root-Cause Resolution: Recurring validation failures demand systemic prompt/contract fixes rather than endless retries.\n\n"
+            "11. CONCURRENCY, PARALLELISM & TECHNICAL LIMITS:\n"
+            "   - Live API Duration Limits: Audio-only <= 15 min, Audio-Video <= 2 min, connection lifetime ~10 min.\n"
+            "   - Safe Scene Chunking: Texts chunked to <= 180 words per scene (~60-70s) to completely avoid connection disconnects.\n"
+            "   - Multi-Scene Parallel Voice Synthesis: Concurrent synthesis across keys using asyncio.gather with unified audio concatenation.\n"
+            "   - Parallel Assets Hub & SFX: Local procedural SFX generation and graphic asset retrieval execute in parallel with TTS.\n"
+            "   - Remotion Multi-Core Rendering: Concurrency 4-8 Chromium worker instances for high-throughput headless video output."
         )
         return ContextLayer(
             layer_type=ContextLayerType.DOMAIN,
             name="development_brain",
-            version="2.3.0",
+            version="2.4.0",
             content=content,
             metadata={"domain": "engineering_and_gemini_architecture"}
         )

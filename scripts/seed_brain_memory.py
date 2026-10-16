@@ -261,6 +261,23 @@ def load_knowledge_chunks() -> list[dict[str, Any]]:
         )
     })
 
+    # 14. Concurrency, Parallelism & Operational Limits
+    chunks.append({
+        "title": "Concurrency, Parallelism & Technical Limits Architecture",
+        "category": "context",
+        "tags": ["concurrency", "parallelism", "limits", "live-api-duration", "remotion-workers"],
+        "source": "docs/wiki/concurrency_and_limits.md",
+        "content": (
+            "Concurrency, Parallelism & Operational Limits:\n"
+            "- Gemini Live API Durations: Audio-only sessions capped at 15 minutes; Audio-Video sessions capped at 2 minutes.\n"
+            "- Physical Connection Lifetime: ~10 minutes before server sends GoAway message.\n"
+            "- Safe Scene Chunking: Scenes must not exceed 180 words (~60s speech) to completely prevent connection timeouts.\n"
+            "- Multi-Scene Parallel Voice Synthesis: Concurrent synthesis across keys via asyncio.gather and unified audio assembly.\n"
+            "- Concurrent Assets & Procedural SFX: Parallel CPU audio generation and asset prefetching during TTS.\n"
+            "- Remotion Rendering: Concurrency 4-8 Chromium worker instances with ~1.2GB RAM allocated per worker."
+        )
+    })
+
     return chunks
 
 async def seed_memory():
