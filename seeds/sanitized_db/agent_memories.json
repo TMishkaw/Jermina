@@ -14017,5 +14017,38 @@
       "video_path": "D:\\JerminaStudio\\JerminaDev\\output\\live_production\\test_render.mp4"
     },
     "created_at": "2026-10-16T18:30:07.771585"
+  },
+  {
+    "id": 191,
+    "channel_id": "stickman_lab",
+    "category": "experiment_experience",
+    "content": "[LIVE AUDIT SELF-EVOLUTION for stickman_lab | Video Viral_Short_Чи_може_ШІ_відчувати_любов_С.mp4]\nOverall Score: 8.2/10 (PASSED)\nOcclusion: Головний персонаж (стикмен) повністю відкритий на передньому плані (zIndex: 25), плашки розташовані на безпечній висоті \nAnimation: Стикмен активно візуалізує мову за допомогою контекстних жестів та плаваючих емодзі.\nDesign: Шрифти 24-30px чіткі та читабельні на мобільному екрані 1080x1920.\nRules:\n- УНИКАТИ: перекриття персонажа картою інтерфейсу\n- ОБОВ'ЯЗКОВО: тримати розмір шрифту ключових текстових плашок не менше 24px",
+    "embedding": null,
+    "metadata_json": {
+      "rules": [
+        "УНИКАТИ: перекриття персонажа картою інтерфейсу",
+        "ОБОВ'ЯЗКОВО: тримати розмір шрифту ключових текстових плашок не менше 24px"
+      ],
+      "score": 8.2,
+      "source": "gemini_3.8_live_review",
+      "video_path": "D:\\JerminaStudio\\JerminaDev\\output\\Viral_Short_Чи_може_ШІ_відчувати_любов_С.mp4"
+    },
+    "created_at": "2026-10-16T18:38:09.295833"
+  },
+  {
+    "id": 192,
+    "channel_id": "stickman_lab",
+    "category": "experiment_experience",
+    "content": "[LIVE AUDIT SELF-EVOLUTION for stickman_lab | Video Viral_Short_Чи_може_ШІ_відчувати_любов_С.mp4]\nOverall Score: 8.5/10 (PASSED)\nOcclusion: **: Стикмен повністю видимий на передньому плані, жодних накладень чи перекриттів інтерфейсом не зафіксовано.\n\n4. **\nAnimation: **: Анімація відповідає тексту, наприклад, жест \"СТОП\" точно доповнює відповідне слово.\n\n5. **\nDesign: **: Текст легко читається на мобільному екрані, розмір шрифту відповідає стандартам.\n\n6. **\nRules:\n- ОБОВ'ЯЗКОВО дотримуватися синхронізації тексту та жестів",
+    "embedding": null,
+    "metadata_json": {
+      "rules": [
+        "ОБОВ'ЯЗКОВО дотримуватися синхронізації тексту та жестів"
+      ],
+      "score": 8.5,
+      "source": "gemini_3.8_live_review",
+      "video_path": "D:\\JerminaStudio\\JerminaDev\\output\\Viral_Short_Чи_може_ШІ_відчувати_любов_С.mp4"
+    },
+    "created_at": "2026-10-16T18:38:57.384140"
   }
 ]
