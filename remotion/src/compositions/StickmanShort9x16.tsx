@@ -7,6 +7,7 @@ import { AudioReactorOrb } from "../components/AudioReactorOrb";
 import { KineticHook } from "../components/KineticHook";
 import { TerminalWindow } from "../components/TerminalWindow";
 import { BreakingTicker } from "../components/BreakingTicker";
+import { Forma2BBlueprint } from "../components/Forma2BBlueprint";
 import { AnimationType, EyeExpression, MouthExpression } from "../components/kinematic_presets";
 
 export interface StickmanCue {
@@ -234,6 +235,21 @@ export const StickmanShort9x16: React.FC<{ config?: StickmanShortConfig }> = ({
             ]}
             accentColor={config.accentColor}
           />
+        </div>
+      )}
+
+      {/* 8.5 Forma 2-B HUD Vector Blueprint (Frames 225+) */}
+      {frame >= 225 && frame < (config.totalFrames ? config.totalFrames - 45 : 340) && (
+        <div
+          style={{
+            position: "absolute",
+            top: 400,
+            left: 70,
+            right: 70,
+            zIndex: 15,
+          }}
+        >
+          <Forma2BBlueprint accentColor={config.accentColor} />
         </div>
       )}
 
