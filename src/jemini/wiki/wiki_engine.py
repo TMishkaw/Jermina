@@ -71,7 +71,14 @@ class WikiEngine:
             <li><strong>Remote Control & VCS:</strong> Мобільний контроль агентів через браузер та Git-нативна панель дифу/комітів.</li>
         </ul>
 
-        <h2>6. Інтерактивні посилання</h2>
+        <h2>6. Кастомні субагенти (.agents/agents)</h2>
+        <ul>
+            <li><strong>Ізоляція Worktree:</strong> Режим <code>branch</code> дозволяє субагентам працювати у фонових Git worktrees.</li>
+            <li><strong>Формат .md з YAML:</strong> Декларативне визначення інструментів, моделі та політики виконання.</li>
+            <li><strong>video-evaluator:</strong> Вбудований субагент аудиту контенту та дотримання Golden Acting Standard.</li>
+        </ul>
+
+        <h2>7. Інтерактивні посилання</h2>
         <ul>
             <li><a href="/docs">Інтерактивна OpenAPI документація (Swagger UI)</a></li>
             <li><a href="/redoc">ReDoc документація</a></li>
