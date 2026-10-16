@@ -63,7 +63,15 @@ class WikiEngine:
             <li><strong>github:</strong> Автономне відкриття GitHub Issues для багів та генерація Pull Requests.</li>
         </ul>
 
-        <h2>5. Інтерактивні посилання</h2>
+        <h2>5. Можливості платформи Antigravity</h2>
+        <ul>
+            <li><strong>Scheduled Tasks:</strong> Періодичне виконання фонових завдань за розкладом на базі Gemini 3.8 Flash.</li>
+            <li><strong>JSON Hooks:</strong> Перехоплення життєвого циклу агента (pre-tool, post-response, loop stop) через локальні shell-скрипти.</li>
+            <li><strong>Voice Transcription:</strong> Живе введення та очищення голосових промтів через <code>Ctrl + M</code>.</li>
+            <li><strong>Remote Control & VCS:</strong> Мобільний контроль агентів через браузер та Git-нативна панель дифу/комітів.</li>
+        </ul>
+
+        <h2>6. Інтерактивні посилання</h2>
         <ul>
             <li><a href="/docs">Інтерактивна OpenAPI документація (Swagger UI)</a></li>
             <li><a href="/redoc">ReDoc документація</a></li>
