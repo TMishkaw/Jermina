@@ -1,6 +1,6 @@
 import React from "react";
 
-export type EyeExpression = "neutral" | "happy" | "angry" | "surprised" | "dead" | "wink" | "suspicious";
+export type EyeExpression = "neutral" | "happy" | "angry" | "surprised" | "dead" | "wink" | "suspicious" | "wide";
 export type MouthExpression = "neutral" | "smile" | "open" | "talking" | "gasp" | "frown" | "smirk";
 
 interface FacialExpressionsProps {
@@ -47,6 +47,7 @@ export const FacialExpressions: React.FC<FacialExpressionsProps> = ({
             <line x1={rightEyeX + 6} y1={eyeY - 7} x2={rightEyeX - 5} y2={eyeY - 3} stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
           </>
         );
+      case "wide":
       case "surprised":
         return (
           <>

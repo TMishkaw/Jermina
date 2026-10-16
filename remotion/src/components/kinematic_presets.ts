@@ -35,9 +35,12 @@ export type AnimationType =
   | "run"
   | "talk"
   | "point"
+  | "point_up"
+  | "surprised"
+  | "shocked"
+  | "laugh"
   | "jump"
   | "punch"
-  | "shocked"
   | "celebrate";
 
 export function getPoseForFrame(
@@ -147,21 +150,25 @@ export function getPoseForFrame(
       };
     }
 
+    case "point_up":
     case "point": {
+      const breathing = Math.sin(time * 1.0 * twoPi) * 3;
+      const pointSway = Math.sin(time * 1.5 * twoPi) * 4;
+      const speechSync = (Math.sin(time * 5 * twoPi) + 1) / 2;
       return {
-        rootYOffset: 0,
-        rootXOffset: 0,
-        torsoAngle: 2,
-        headTilt: 5,
-        leftShoulderAngle: -5,
-        leftElbowAngle: 10,
-        rightShoulderAngle: -75, // arm points forward-up
-        rightElbowAngle: 5,   // straight arm
+        rootYOffset: breathing,
+        rootXOffset: Math.sin(time * 0.5 * twoPi) * 2,
+        torsoAngle: 2 + Math.sin(time * 0.8 * twoPi) * 1.5,
+        headTilt: 4 + Math.sin(time * 1.2 * twoPi) * 3,
+        leftShoulderAngle: -10 + Math.sin(time * 1.1 * twoPi) * 6,
+        leftElbowAngle: 25 + Math.sin(time * 1.4 * twoPi) * 10,
+        rightShoulderAngle: -80 + pointSway, // dynamic upward/forward point
+        rightElbowAngle: 8,   // straight pointing arm with micro-flex
         leftHipAngle: -2,
-        leftKneeAngle: 0,
+        leftKneeAngle: 3,
         rightHipAngle: 4,
-        rightKneeAngle: 0,
-        talkingCadence: (Math.sin(time * 5 * twoPi) + 1) / 2,
+        rightKneeAngle: 2,
+        talkingCadence: speechSync,
       };
     }
 
@@ -257,23 +264,46 @@ export function getPoseForFrame(
       };
     }
 
+    case "surprised":
     case "shocked": {
-      // High-frequency jitter
-      const jitter = (Math.random() - 0.5) * 6;
+      // Dynamic recoil and gasping shock
+      const jitter = (Math.sin(time * 12 * twoPi)) * 3;
       return {
-        rootYOffset: jitter,
-        rootXOffset: (Math.random() - 0.5) * 4,
-        torsoAngle: -8 + jitter * 0.5,
-        headTilt: (Math.random() - 0.5) * 8,
-        leftShoulderAngle: -105 + jitter * 2, // hands on head / up
-        leftElbowAngle: 100,
-        rightShoulderAngle: -105 - jitter * 2,
-        rightElbowAngle: 100,
-        leftHipAngle: -10,
-        leftKneeAngle: 15,
-        rightHipAngle: 10,
-        rightKneeAngle: 15,
-        talkingCadence: 1.0,
+        rootYOffset: jitter - 6,
+        rootXOffset: Math.sin(time * 6 * twoPi) * 2,
+        torsoAngle: -8,
+        headTilt: -6 + Math.sin(time * 3 * twoPi) * 4,
+        leftShoulderAngle: -100 + jitter * 2,
+        leftElbowAngle: 85,
+        rightShoulderAngle: -100 - jitter * 2,
+        rightElbowAngle: 85,
+        leftHipAngle: -8,
+        leftKneeAngle: 14,
+        rightHipAngle: 8,
+        rightKneeAngle: 14,
+        talkingCadence: 0.9,
+      };
+    }
+
+    case "laugh": {
+      // Organic laughter bounce and head nod
+      const laughBounce = Math.abs(Math.sin(time * 3.5 * twoPi)) * 9;
+      const headNod = Math.sin(time * 3.5 * twoPi) * 8;
+      const armJiggle = Math.sin(time * 3.5 * twoPi) * 14;
+      return {
+        rootYOffset: -laughBounce,
+        rootXOffset: 0,
+        torsoAngle: 4 + Math.sin(time * 1.5 * twoPi) * 3,
+        headTilt: -4 + headNod,
+        leftShoulderAngle: -20 + armJiggle * 0.5,
+        leftElbowAngle: 35,
+        rightShoulderAngle: -45 + armJiggle,
+        rightElbowAngle: 60,
+        leftHipAngle: -4,
+        leftKneeAngle: 6,
+        rightHipAngle: 6,
+        rightKneeAngle: 8,
+        talkingCadence: (Math.sin(time * 7 * twoPi) + 1) / 2,
       };
     }
 
@@ -301,21 +331,22 @@ export function getPoseForFrame(
 
     case "idle":
     default: {
-      const breathing = Math.sin(time * 0.8 * twoPi) * 2;
+      const breathing = Math.sin(time * 0.9 * twoPi) * 3.5;
+      const gentleSway = Math.sin(time * 0.45 * twoPi) * 3;
       return {
         rootYOffset: breathing,
-        rootXOffset: 0,
-        torsoAngle: 0,
-        headTilt: Math.sin(time * 0.4 * twoPi) * 2,
-        leftShoulderAngle: 0,
-        leftElbowAngle: 5,
-        rightShoulderAngle: 0,
-        rightElbowAngle: 5,
+        rootXOffset: gentleSway,
+        torsoAngle: Math.sin(time * 0.5 * twoPi) * 1.5,
+        headTilt: Math.sin(time * 0.7 * twoPi) * 3,
+        leftShoulderAngle: -8 + Math.sin(time * 0.9 * twoPi) * 4,
+        leftElbowAngle: 15,
+        rightShoulderAngle: -8 - Math.sin(time * 0.9 * twoPi) * 4,
+        rightElbowAngle: 15,
         leftHipAngle: -2,
-        leftKneeAngle: 2,
+        leftKneeAngle: 3,
         rightHipAngle: 2,
-        rightKneeAngle: 2,
-        talkingCadence: 0,
+        rightKneeAngle: 3,
+        talkingCadence: 0.35,
       };
     }
   }

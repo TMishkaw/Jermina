@@ -52,46 +52,38 @@ class RemotionRenderer:
         self.out_dir.mkdir(parents=True, exist_ok=True)
 
     def generate_stickman_cues(self, total_frames: int) -> list[dict[str, Any]]:
-        """Generates dynamic acting cues tailored to video length."""
-        f1 = min(60, total_frames // 4)
-        f2 = min(120, (total_frames - f1) // 3)
-        f3 = min(100, (total_frames - f1 - f2) // 2)
-        f4 = max(30, total_frames - f1 - f2 - f3)
+        """Generates dynamic acting cues tailored to video length with constant lively gesturing."""
+        cues: list[dict[str, Any]] = []
+        current_frame = 0
 
-        return [
-            {
-                "fromFrame": 0,
-                "durationInFrames": f1,
-                "animation": "surprised",
-                "eyeType": "wide",
-                "mouthType": "gasp",
-                "prop": "none",
-            },
-            {
-                "fromFrame": f1,
-                "durationInFrames": f2,
-                "animation": "talk",
-                "eyeType": "neutral",
-                "mouthType": "talking",
-                "prop": "microphone",
-            },
-            {
-                "fromFrame": f1 + f2,
-                "durationInFrames": f3,
-                "animation": "laugh",
-                "eyeType": "happy",
-                "mouthType": "smile",
-                "prop": "coffee",
-            },
-            {
-                "fromFrame": f1 + f2 + f3,
-                "durationInFrames": f4,
-                "animation": "point_up",
-                "eyeType": "wink",
-                "mouthType": "smile",
-                "prop": "laptop",
-            },
+        # Sequence palette: (animation, eyeType, mouthType, prop)
+        motion_sequence = [
+            ("surprised", "wide", "gasp", "none"),
+            ("talk", "neutral", "talking", "microphone"),
+            ("point_up", "wink", "smile", "none"),
+            ("laugh", "happy", "smile", "coffee"),
+            ("talk", "happy", "talking", "none"),
+            ("point_up", "neutral", "talking", "none"),
+            ("celebrate", "happy", "smile", "none"),
         ]
+
+        step_duration = 75  # ~2.5 seconds per cue at 30fps
+        idx = 0
+        while current_frame < total_frames:
+            dur = min(step_duration, total_frames - current_frame)
+            anim, eye, mouth, prop = motion_sequence[idx % len(motion_sequence)]
+            cues.append({
+                "fromFrame": current_frame,
+                "durationInFrames": dur,
+                "animation": anim,
+                "eyeType": eye,
+                "mouthType": mouth,
+                "prop": prop,
+            })
+            current_frame += dur
+            idx += 1
+
+        return cues
 
     async def render_video(
         self,

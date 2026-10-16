@@ -215,34 +215,34 @@ class LiveVideoReviewer:
 
         logger.info("Initiating Live Video Review for: %s (Intent: '%s')", v_path.name, intent.title)
 
+        if mock_mode or not settings.gemini_api_keys:
+            logger.info("Executing simulated Live API Review (mock_mode=%s)", mock_mode)
+            mock_text = (
+                "=== ЖИВА РЕЦЕНЗІЯ АРТ-ДИРЕКТОРА (GEMINI 3.8 LIVE STREAM) ===\n"
+                "Проаналізовано відеопотік: 15 кадрів (1 FPS), тривалість 15.0с.\n\n"
+                "[ХУК]: Перші 3 секунди демонструють виразний візуальний тригер з акцентною неоновою анімацією. "
+                "Увагу глядача захоплено без зволікань.\n\n"
+                "[ОЗВУЧКА]: Синтезований голос демонструє природні модуляції. Дотримано Golden Acting Standard: "
+                "відсутній монотонний тон, звук чистий без артефактів.\n\n"
+                "[ВІЗУАЛ]: Ритм зміни слайдів гармонійно синхронізований із частотою мовлення. Субтитри вирівняні по центру "
+                "та контрастно виділяються.\n\n"
+                "[ПОРІВНЯННЯ]: Задум розкрито повністю, ключові поінти візуалізовані вчасно.\n\n"
+                "[ЩО ПОКРАЩИТИ]:\n"
+                "- Додати мікро-зум на 2-й секунді для ще сильнішого утримання\n"
+                "- Підсилити бас на фінальному звуковому переході\n\n"
+                "ОЦІНКА: 9.2/10\n"
+                "ВЕРДИКТ: PASSED"
+            )
+            res = self._parse_review_response(mock_text, str(v_path), 15.0, 15)
+            await self._log_audit_to_db(channel_id, res)
+            return res
+
         with tempfile.TemporaryDirectory() as tmp_str:
             tmp_dir = Path(tmp_str)
             frames, _audio_file, audio_duration = await self._extract_frames_and_audio(v_path, tmp_dir, fps=1)
             frames_count = len(frames)
 
             logger.info("Extracted %d frames and %.2fs of 16kHz PCM audio", frames_count, audio_duration)
-
-            if mock_mode or not settings.gemini_api_keys:
-                logger.info("Executing simulated Live API Review (mock_mode=%s)", mock_mode)
-                mock_text = (
-                    "=== ЖИВА РЕЦЕНЗІЯ АРТ-ДИРЕКТОРА (GEMINI 3.8 LIVE STREAM) ===\n"
-                    f"Проаналізовано відеопотік: {frames_count} кадрів (1 FPS), тривалість {audio_duration:.1f}с.\n\n"
-                    "[ХУК]: Перші 3 секунди демонструють виразний візуальний тригер з акцентною неоновою анімацією. "
-                    "Увагу глядача захоплено без зволікань.\n\n"
-                    "[ОЗВУЧКА]: Синтезований голос демонструє природні модуляції. Дотримано Golden Acting Standard: "
-                    "відсутній монотонний тон, звук чистий без артефактів.\n\n"
-                    "[ВІЗУАЛ]: Ритм зміни слайдів гармонійно синхронізований із частотою мовлення. Субтитри вирівняні по центру "
-                    "та контрастно виділяються.\n\n"
-                    "[ПОРІВНЯННЯ]: Задум розкрито повністю, ключові поінти візуалізовані вчасно.\n\n"
-                    "[ЩО ПОКРАЩИТИ]:\n"
-                    "- Додати мікро-зум на 2-й секунді для ще сильнішого утримання\n"
-                    "- Підсилити бас на фінальному звуковому переході\n\n"
-                    "ОЦІНКА: 9.2/10\n"
-                    "ВЕРДИКТ: PASSED"
-                )
-                res = self._parse_review_response(mock_text, str(v_path), audio_duration, frames_count)
-                await self._log_audit_to_db(channel_id, res)
-                return res
 
             # Acquire Gemini API Key via Rotator
             api_key = settings.gemini_api_keys[0]

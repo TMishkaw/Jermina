@@ -56,7 +56,7 @@ async def run_e2e_render(
     channel_id: str = "stickman_lab",
     aspect_ratio: str = "9:16",
     max_correction_attempts: int = 2,
-    use_live_review: bool = False,
+    use_live_review: bool = True,
     public: bool = False,
 ) -> dict[str, Any]:
     """Executes the full autonomous pipeline with self-correction."""
@@ -201,23 +201,30 @@ async def run_e2e_render(
     # 5. YouTube Shorts Publishing (Optional Gate)
     published_res = None
     if publish_youtube:
-        from jemini.publishing.youtube_publisher import (
-            PublishingPrivacyStatus,
-            YouTubePublisher,
-            YouTubeShortMetadata,
-        )
-
-        publisher = YouTubePublisher()
-        if not publisher.has_credentials() and not mock_mode:
-            logger.warning(
-                "YouTube publishing requested, but client secrets not found at 'config/client_secret.json'.\n"
-                "Please place OAuth2 client credentials at 'config/client_secret.json' to enable live uploads."
+        if current_status != ValidationStatus.PASSED and not mock_mode:
+            logger.error(
+                "❌ Publishing aborted: video failed multimodal validation gate (status=%s, score=%.1f). Aborting YouTube upload.",
+                current_status.value,
+                validation_card.overall_score if validation_card else 0.0,
             )
         else:
-            is_short = aspect_ratio in ["9:16", "vertical"]
-            target_label = "YouTube Shorts" if is_short else "YouTube (16:9 Widescreen)"
-            target_privacy = PublishingPrivacyStatus.PUBLIC if public else PublishingPrivacyStatus.UNLISTED
-            logger.info("Publishing video to %s (Status: %s)...", target_label, target_privacy.value.upper())
+            from jemini.publishing.youtube_publisher import (
+                PublishingPrivacyStatus,
+                YouTubePublisher,
+                YouTubeShortMetadata,
+            )
+
+            publisher = YouTubePublisher()
+            if not publisher.has_credentials() and not mock_mode:
+                logger.warning(
+                    "YouTube publishing requested, but client secrets not found at 'config/client_secret.json'.\n"
+                    "Please place OAuth2 client credentials at 'config/client_secret.json' to enable live uploads."
+                )
+            else:
+                is_short = aspect_ratio in ["9:16", "vertical"]
+                target_label = "YouTube Shorts" if is_short else "YouTube (16:9 Widescreen)"
+                target_privacy = PublishingPrivacyStatus.PUBLIC if public else PublishingPrivacyStatus.UNLISTED
+                logger.info("Publishing video to %s (Status: %s)...", target_label, target_privacy.value.upper())
             published_res = await publisher.publish_video(
                 video_path=final_video,
                 metadata=YouTubeShortMetadata(
@@ -731,7 +738,7 @@ def main():
     render_parser.add_argument("--output-dir", type=str, default="output", help="Destination folder for artifacts")
     render_parser.add_argument("--mock-mode", action="store_true", help="Execute in offline mock mode")
     render_parser.add_argument("--skip-validation", action="store_true", help="Skip multimodal validation loop")
-    render_parser.add_argument("--live-review", action="store_true", help="Perform real-time multimodal live review via Gemini 3.8 Live API WebSocket")
+    render_parser.add_argument("--no-live-review", action="store_true", help="Disable Gemini 3.8 Live API real-time video review (Live review is enabled by default)")
     render_parser.add_argument("--aspect-ratio", type=str, default="9:16", choices=["9:16", "16:9"], help="Aspect ratio (9:16 vertical or 16:9 widescreen)")
     render_parser.add_argument("--widescreen", action="store_true", help="Shortcut for 16:9 widescreen YouTube video")
     render_parser.add_argument("--publish-youtube", action="store_true", help="Upload rendered video to YouTube (Shorts or Widescreen)")
@@ -822,7 +829,7 @@ def main():
                 publish_tiktok=args.publish_tiktok,
                 operator_review=args.operator_review,
                 aspect_ratio=target_aspect,
-                use_live_review=args.live_review,
+                use_live_review=not args.no_live_review,
             )
         )
     elif args.command == "review-live":

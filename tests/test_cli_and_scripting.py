@@ -24,11 +24,12 @@ def test_remotion_renderer_stickman_cues():
     renderer = RemotionRenderer()
     cues = renderer.generate_stickman_cues(total_frames=360)
 
-    assert len(cues) == 4
+    assert len(cues) >= 4
+    assert sum(c["durationInFrames"] for c in cues) == 360
     assert cues[0]["animation"] == "surprised"
     assert cues[1]["animation"] == "talk"
-    assert cues[2]["animation"] == "laugh"
-    assert cues[3]["animation"] == "point_up"
+    assert cues[2]["animation"] == "point_up"
+    assert cues[3]["animation"] == "laugh"
 
 
 @pytest.mark.asyncio
