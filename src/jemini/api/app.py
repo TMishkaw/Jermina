@@ -176,6 +176,123 @@ async def publish_content(platform: str, payload: PublicationPayload):
 
     return await publisher.publish(payload)
 
+
 @app.get("/wiki", response_class=HTMLResponse, tags=["Wiki"])
 async def get_wiki_html():
     return wiki.render_html()
+
+
+# ----------------- Production Queue Endpoints -----------------
+class EnqueueTaskRequest(BaseModel):
+    channel_id: str
+    topic: str
+    metadata: dict[str, Any] | None = None
+
+
+@app.get("/queue/tasks", tags=["Production Queue"])
+async def list_queue_tasks(channel_id: str | None = None):
+    """Lists pending, processing, and completed video generation tasks."""
+    from jemini.scheduling.queue import ProductionQueue
+
+    queue = ProductionQueue()
+    tasks = queue.list_tasks()
+    if channel_id:
+        tasks = [t for t in tasks if t.channel_id == channel_id]
+    return {"total": len(tasks), "tasks": [t.model_dump(mode="json") for t in tasks]}
+
+
+@app.post("/queue/enqueue", tags=["Production Queue"])
+async def enqueue_production_task(req: EnqueueTaskRequest):
+    """Enqueues a new topic into the autonomous generation queue."""
+    from jemini.scheduling.queue import ProductionQueue
+
+    queue = ProductionQueue()
+    task = queue.enqueue(channel_id=req.channel_id, topic=req.topic, metadata=req.metadata)
+    return {"status": "enqueued", "task": task.model_dump(mode="json")}
+
+
+# ----------------- Stickman Kinematics & Motions -----------------
+@app.get("/motions", tags=["Stickman Kinematics"])
+async def list_motion_presets():
+    """Lists registered kinematic acting presets and props from SEMANTIC_ONTOLOGY."""
+    from jemini.rendering.semantic_actor import SEMANTIC_ONTOLOGY
+
+    presets = []
+    for keywords, anim, eye, mouth, prop, emojis in SEMANTIC_ONTOLOGY:
+        presets.append({
+            "animation": anim,
+            "prop": prop,
+            "eye_type": eye,
+            "mouth_type": mouth,
+            "emojis": emojis,
+            "keywords": keywords[:5],
+        })
+    return {"total_presets": len(presets), "presets": presets}
+
+
+@app.get("/motions/{preset_name}", tags=["Stickman Kinematics"])
+async def get_motion_preset(preset_name: str):
+    """Retrieves motion preset configuration by name."""
+    from jemini.rendering.semantic_actor import SEMANTIC_ONTOLOGY
+
+    for keywords, anim, eye, mouth, prop, emojis in SEMANTIC_ONTOLOGY:
+        if anim.lower() == preset_name.lower():
+            return {
+                "animation": anim,
+                "prop": prop,
+                "eye_type": eye,
+                "mouth_type": mouth,
+                "emojis": emojis,
+                "keywords": keywords,
+            }
+    raise HTTPException(status_code=404, detail=f"Motion preset '{preset_name}' not found.")
+
+
+# ----------------- YouTube Categories Endpoints -----------------
+class CategoryRecommendRequest(BaseModel):
+    topic: str
+    script_text: str = ""
+    tags: list[str] = []
+
+
+@app.get("/youtube/categories", tags=["YouTube Publishing"])
+async def list_youtube_categories():
+    """Lists all official YouTube video categories."""
+    from jemini.publishing.category_selector import YOUTUBE_CATEGORY_NAMES, YouTubeCategory
+
+    cats = [
+        {"id": c.value, "enum_name": c.name, "display_name": YOUTUBE_CATEGORY_NAMES.get(c.value, c.name)}
+        for c in YouTubeCategory
+    ]
+    return {"total_categories": len(cats), "categories": cats}
+
+
+@app.post("/youtube/categories/recommend", tags=["YouTube Publishing"])
+async def recommend_youtube_category(req: CategoryRecommendRequest):
+    """Recommends the best YouTube Category ID based on topic, script, and tags."""
+    from jemini.publishing.category_selector import CategorySelector
+
+    decision = CategorySelector.select_category(
+        title=req.topic,
+        description=req.script_text,
+        tags=req.tags,
+    )
+    return decision.model_dump(mode="json")
+
+
+# ----------------- API Reflection -----------------
+@app.get("/api/endpoints", tags=["General"])
+async def list_api_endpoints():
+    """Returns a full list of registered REST API endpoints in Jemini Core."""
+    endpoints = []
+    for route in app.routes:
+        if hasattr(route, "methods") and hasattr(route, "path"):
+            endpoints.append({
+                "path": route.path,
+                "methods": sorted(list(route.methods)),
+                "name": route.name,
+                "summary": getattr(route, "summary", None) or route.name,
+                "tags": getattr(route, "tags", []),
+            })
+    return {"total_endpoints": len(endpoints), "endpoints": endpoints}
+

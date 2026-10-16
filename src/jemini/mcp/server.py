@@ -74,6 +74,59 @@ TOOLS = [
             "properties": {},
         },
     },
+    {
+        "name": "jemini_list_api_endpoints",
+        "description": "Lists all available REST API endpoints in Jemini Core with HTTP methods, tags, and operational summaries.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "tag": {
+                    "type": "string",
+                    "description": "Optional tag filter (e.g. 'API Key Rotator', 'Live Multimodal Engine', 'Production Queue', 'Stickman Kinematics', 'YouTube Publishing')",
+                },
+            },
+        },
+    },
+    {
+        "name": "jemini_api_schema",
+        "description": "Retrieves the complete OpenAPI 3.1.0 schema specification of the Jemini Core REST API.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "endpoint": {
+                    "type": "string",
+                    "description": "Optional endpoint substring filter (e.g. '/rotator', '/queue', '/motions', '/youtube')",
+                },
+            },
+        },
+    },
+    {
+        "name": "jemini_api_call",
+        "description": "Executes an in-process HTTP call to the Jemini Core REST API without external network overhead.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "endpoint": {
+                    "type": "string",
+                    "description": "The API endpoint path (e.g. '/health', '/rotator/status', '/channels', '/queue/tasks', '/motions', '/youtube/categories')",
+                },
+                "method": {
+                    "type": "string",
+                    "enum": ["GET", "POST", "PUT", "DELETE"],
+                    "description": "HTTP method (default: 'GET')",
+                },
+                "data": {
+                    "type": "object",
+                    "description": "Optional JSON body dictionary for POST or PUT requests",
+                },
+                "params": {
+                    "type": "object",
+                    "description": "Optional query parameters dictionary",
+                },
+            },
+            "required": ["endpoint"],
+        },
+    },
 ]
 
 
@@ -191,6 +244,63 @@ class MCPServer:
             for s in sections:
                 lines.append(f"- `{s}`")
             return "\n".join(lines)
+
+        if name == "jemini_list_api_endpoints":
+            from jemini.api.app import app
+
+            tag_filter = args.get("tag", "").lower().strip()
+            endpoints = []
+            for route in app.routes:
+                if hasattr(route, "methods") and hasattr(route, "path"):
+                    tags = getattr(route, "tags", [])
+                    tag_str = ", ".join(tags) if tags else "General"
+                    if tag_filter and tag_filter not in tag_str.lower():
+                        continue
+                    endpoints.append({
+                        "path": route.path,
+                        "methods": ", ".join(sorted(list(route.methods))),
+                        "summary": getattr(route, "summary", None) or route.name,
+                        "tags": tag_str,
+                    })
+            lines = [
+                f"# Jemini Core API Endpoints ({len(endpoints)} routes)" + (f" - Filter: '{tag_filter}'" if tag_filter else "") + ":\n",
+                "| Method | Endpoint | Tags | Summary |",
+                "| :--- | :--- | :--- | :--- |",
+            ]
+            for ep in endpoints:
+                lines.append(f"| `{ep['methods']}` | `{ep['path']}` | {ep['tags']} | {ep['summary']} |")
+            return "\n".join(lines)
+
+        if name == "jemini_api_schema":
+            from jemini.api.app import app
+
+            schema = app.openapi()
+            endpoint_filter = args.get("endpoint")
+            if endpoint_filter:
+                paths = schema.get("paths", {})
+                matched = {p: info for p, info in paths.items() if endpoint_filter.lower() in p.lower()}
+                return json.dumps({"matched_paths": matched, "components": schema.get("components", {})}, indent=2, ensure_ascii=False)
+            return json.dumps(schema, indent=2, ensure_ascii=False)
+
+        if name == "jemini_api_call":
+            from fastapi.testclient import TestClient
+            from jemini.api.app import app
+
+            endpoint = args.get("endpoint", "")
+            method = args.get("method", "GET").upper()
+            data = args.get("data")
+            params = args.get("params")
+
+            client = TestClient(app)
+            resp = client.request(method=method, url=endpoint, json=data, params=params)
+
+            try:
+                body = resp.json()
+                body_formatted = json.dumps(body, indent=2, ensure_ascii=False)
+            except Exception:
+                body_formatted = resp.text
+
+            return f"### HTTP {resp.status_code} ({method} {endpoint})\n```json\n{body_formatted}\n```"
 
         return f"Error: Unknown tool '{name}'."
 

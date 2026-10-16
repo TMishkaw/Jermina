@@ -19,8 +19,9 @@ def test_studio_docs_list_documents():
     engine = StudioDocsEngine()
     docs = engine.list_documents()
 
-    assert len(docs) == 25
+    assert len(docs) == 26
     doc_names = {d["doc_name"] for d in docs}
+    assert "ApiReference" in doc_names
     assert "StickmanKinematics" in doc_names
     assert "MotionLibraryPgvector" in doc_names
     assert "RemotionHardwareGPU" in doc_names
@@ -41,7 +42,7 @@ def test_studio_docs_list_documents():
     assert all(d["section"] == "wiki" for d in wiki_docs)
 
     dev_docs = engine.list_documents(section="DevDocs")
-    assert len(dev_docs) == 3
+    assert len(dev_docs) == 4
     assert all(d["section"] == "DevDocs" for d in dev_docs)
 
 

@@ -55,6 +55,9 @@ def test_mcp_tools_list(mcp_server):
     assert "jemini_get_doc" in tool_names
     assert "jemini_list_docs" in tool_names
     assert "jemini_list_sections" in tool_names
+    assert "jemini_list_api_endpoints" in tool_names
+    assert "jemini_api_schema" in tool_names
+    assert "jemini_api_call" in tool_names
 
 
 def test_mcp_call_search_docs(mcp_server):
@@ -139,6 +142,60 @@ def test_mcp_call_list_docs_and_sections(mcp_server):
     assert "git_flow" in list_text
 
 
+def test_mcp_call_api_tools(mcp_server):
+    # 1. jemini_list_api_endpoints
+    req_ep = {
+        "jsonrpc": "2.0",
+        "id": 10,
+        "method": "tools/call",
+        "params": {
+            "name": "jemini_list_api_endpoints",
+            "arguments": {},
+        },
+    }
+    resp_ep = mcp_server.handle_request(req_ep)
+    assert resp_ep["id"] == 10
+    text_ep = resp_ep["result"]["content"][0]["text"]
+    assert "/health" in text_ep
+    assert "/rotator/status" in text_ep
+    assert "/motions" in text_ep
+    assert "/queue/tasks" in text_ep
+
+    # 2. jemini_api_schema
+    req_schema = {
+        "jsonrpc": "2.0",
+        "id": 11,
+        "method": "tools/call",
+        "params": {
+            "name": "jemini_api_schema",
+            "arguments": {"endpoint": "/health"},
+        },
+    }
+    resp_schema = mcp_server.handle_request(req_schema)
+    assert resp_schema["id"] == 11
+    text_schema = resp_schema["result"]["content"][0]["text"]
+    assert "/health" in text_schema
+
+    # 3. jemini_api_call
+    req_call = {
+        "jsonrpc": "2.0",
+        "id": 12,
+        "method": "tools/call",
+        "params": {
+            "name": "jemini_api_call",
+            "arguments": {
+                "endpoint": "/health",
+                "method": "GET",
+            },
+        },
+    }
+    resp_call = mcp_server.handle_request(req_call)
+    assert resp_call["id"] == 12
+    text_call = resp_call["result"]["content"][0]["text"]
+    assert "HTTP 200" in text_call
+    assert "healthy" in text_call
+
+
 def test_mcp_unknown_method(mcp_server):
     req = {
         "jsonrpc": "2.0",
@@ -148,3 +205,4 @@ def test_mcp_unknown_method(mcp_server):
     resp = mcp_server.handle_request(req)
     assert "error" in resp
     assert resp["error"]["code"] == -32601
+
