@@ -49,6 +49,10 @@ class PublishedVideoResult(BaseModel):
     privacy_status: str
     uploaded_at: str
 
+    @property
+    def published_url(self) -> str:
+        return self.shorts_url
+
 
 class YouTubePublisher:
     """Manages YouTube Data API v3 uploads and token credentials."""

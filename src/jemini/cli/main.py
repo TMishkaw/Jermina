@@ -51,6 +51,7 @@ async def run_e2e_render(
     mock_mode: bool = False,
     skip_validation: bool = False,
     publish_youtube: bool = False,
+    operator_review: bool = False,
     channel_id: str = "stickman_lab",
     max_correction_attempts: int = 2,
 ) -> dict[str, Any]:
@@ -203,6 +204,22 @@ async def run_e2e_render(
             )
             logger.info("✓ YouTube Short Published: %s", published_res.shorts_url)
 
+    # 6. Operator Review Control Plane Enrollment (Optional Gate)
+    operator_sub_id = None
+    if operator_review:
+        from jemini.operator.review_service import OperatorReviewService
+
+        op_service = OperatorReviewService()
+        sub = op_service.submit_for_review(
+            video_path=final_video,
+            title=short_script.title,
+            hook_text=short_script.hook_text,
+            channel_id=profile.channel_id,
+            validation_score=validation_card.overall_score if validation_card else 9.0,
+        )
+        operator_sub_id = sub.submission_id
+        logger.info("✓ Submitted to Operator Approval Plane: %s", operator_sub_id)
+
     summary = {
         "title": short_script.title,
         "video_path": str(final_video),
@@ -211,6 +228,7 @@ async def run_e2e_render(
         "validation_score": validation_card.overall_score if validation_card else None,
         "validation_status": validation_card.status.value if validation_card else "SKIPPED",
         "youtube_shorts_url": published_res.shorts_url if published_res else None,
+        "operator_submission_id": operator_sub_id,
     }
 
     summary_file = out_dir / "pipeline_summary.json"
@@ -220,6 +238,8 @@ async def run_e2e_render(
     logger.info("   Video artifact: %s", final_video)
     if published_res:
         logger.info("   YouTube URL:    %s", published_res.shorts_url)
+    if operator_sub_id:
+        logger.info("   Operator Sub:   %s (Pending Approval)", operator_sub_id)
     logger.info("==================================================")
     return summary
 
@@ -438,6 +458,47 @@ async def handle_feedback(
     await feedback.persist_learning_to_memory(metrics, result)
 
 
+async def handle_operator(
+    list_subs: bool,
+    approve_id: str | None,
+    reject_id: str | None,
+    publish_youtube: bool,
+    mock_mode: bool,
+) -> None:
+    """Manages human-in-the-loop review, one-click approvals, and video archival."""
+    from jemini.operator.review_service import OperatorReviewService
+
+    service = OperatorReviewService()
+
+    if approve_id:
+        sub = await service.approve(approve_id, publish_youtube=publish_youtube, mock_mode=mock_mode)
+        print(f"\n✓ Approved submission {sub.submission_id} (Status: {sub.status.value.upper()})")
+        if sub.published_video_id:
+            print(f"  Published Video ID: {sub.published_video_id}")
+        print()
+        return
+
+    if reject_id:
+        sub = service.reject(reject_id)
+        print(f"\n✓ Rejected submission {sub.submission_id} (Status: {sub.status.value.upper()})")
+        print(f"  Archived to: {sub.video_path}\n")
+        return
+
+    # Default to listing
+    subs = service.list_submissions()
+    print("\n" + "=" * 95)
+    print("                        JEMINI OPERATOR APPROVAL PLANE")
+    print("=" * 95)
+    if not subs:
+        print("  Review queue is empty. Use 'render --operator-review' to submit videos for approval.")
+    else:
+        print(f"{'SUBMISSION ID':<15} | {'CHANNEL':<16} | {'STATUS':<10} | {'SCORE':<5} | {'TITLE'}")
+        print("-" * 95)
+        for s in subs:
+            print(f"{s.submission_id:<15} | {s.channel_id:<16} | {s.status.value.upper():<10} | {s.validation_score:<5.1f} | {s.title[:40]}")
+    print("=" * 95 + "\n")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Jemini Autonomous Video Production CLI")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -451,6 +512,7 @@ def main():
     render_parser.add_argument("--mock-mode", action="store_true", help="Execute in offline mock mode")
     render_parser.add_argument("--skip-validation", action="store_true", help="Skip multimodal validation loop")
     render_parser.add_argument("--publish-youtube", action="store_true", help="Upload rendered video to YouTube Shorts")
+    render_parser.add_argument("--operator-review", action="store_true", help="Submit to operator review plane instead of publishing immediately")
 
     # Subcommand: channels
     subparsers.add_parser("channels", help="List registered multi-channel profiles and branding")
@@ -476,6 +538,14 @@ def main():
     feedback_parser.add_argument("--midpoint-rate", type=float, default=45.0, help="Midpoint retention percentage at 15 seconds (0-100)")
     feedback_parser.add_argument("--completion-rate", type=float, default=35.0, help="Completion rate percentage (0-100)")
 
+    # Subcommand: operator
+    operator_parser = subparsers.add_parser("operator", help="Manage operator review and approvals")
+    operator_parser.add_argument("--list", action="store_true", help="List pending video submissions")
+    operator_parser.add_argument("--approve", type=str, help="Submission ID to approve")
+    operator_parser.add_argument("--reject", type=str, help="Submission ID to reject and archive")
+    operator_parser.add_argument("--publish-youtube", action="store_true", help="Publish to YouTube upon approval")
+    operator_parser.add_argument("--mock-mode", action="store_true", help="Execute approval in mock mode")
+
     # Subcommand: test-readiness
     subparsers.add_parser("test-readiness", help="Run pre-flight Matrix Readiness Suite for QA handoff")
 
@@ -491,6 +561,7 @@ def main():
                 mock_mode=args.mock_mode,
                 skip_validation=args.skip_validation,
                 publish_youtube=args.publish_youtube,
+                operator_review=args.operator_review,
             )
         )
     elif args.command == "channels":
@@ -520,6 +591,16 @@ def main():
                 hook_rate=args.hook_rate,
                 midpoint_rate=args.midpoint_rate,
                 completion_rate=args.completion_rate,
+            )
+        )
+    elif args.command == "operator":
+        asyncio.run(
+            handle_operator(
+                list_subs=args.list,
+                approve_id=args.approve,
+                reject_id=args.reject,
+                publish_youtube=args.publish_youtube,
+                mock_mode=args.mock_mode,
             )
         )
     elif args.command == "test-readiness":
