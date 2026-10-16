@@ -20,18 +20,19 @@
 - Adhere to the voice catalog: `Zephyr` (drive/humor/drama), `Aoede` (vocal fry/whisper/seduction), `Fenrir` (brutal bass/cyborg), `Kore` (timid android/fragility).
 
 ## 4. Architecture & Git Flow
-- All library improvements go strictly into the `dev` branch.
-- Zero-leak policy: never commit secret API keys or credentials.
+- All library improvements go strictly into the `dev` branch via Pull Requests adhering to [`.github/PULL_REQUEST_TEMPLATE.md`](file:///d:/JerminaStudio/JerminaDev/.github/PULL_REQUEST_TEMPLATE.md).
+- Adhere strictly to the guidelines, Conventional Commits, and branch naming conventions in [`CONTRIBUTING.md`](file:///d:/JerminaStudio/JerminaDev/CONTRIBUTING.md).
+- Zero-leak policy: never commit secret API keys, tokens, or credentials (`config/client_secret.json` is git-ignored).
 
 ## 5. Determinism vs. Flexibility Matrix
 - **Core & Engine (Strictly Deterministic):** Git Flow, Key Rotator + 429 Hot Standby, PostgreSQL schemas, strict typing & ruff/pytest.
 - **AI & Context Layers (Hybrid):** Layered hierarchy is invariant (Core -> Domain -> Channel); channel prompts and pgvector memory are flexible.
 - **Multimodal Streams (Adaptive with Rigid Triggers):** Deterministic scenarios A/B/C and graceful degradation; flexible real-time visual interpretation.
-- **Self-Evolution (Bounded Exploration):** Anchor niche is immutable; creative hypotheses and GitHub Issues generation are autonomous.
+- **Self-Evolution (Bounded Exploration):** Anchor niche is immutable; creative hypotheses and GitHub Issues generation are autonomous, adhering to [`.github/ISSUE_TEMPLATE/03_agent_hypothesis.yml`](file:///d:/JerminaStudio/JerminaDev/.github/ISSUE_TEMPLATE/03_agent_hypothesis.yml) with structured labels (`type:agent-hypothesis`, `origin:agent-*`).
 
 ## 6. Root-Cause First (Development RCA Protocol)
 - **Zero Quick-Fix Policy:** Never use blind `try-except pass` or local workarounds that mask symptoms.
-- **Step 1 (RCA):** Uncover why the schema, type, or contract permitted the failure.
+- **Step 1 (RCA):** Uncover why the schema, type, or contract permitted the failure (documented via [`.github/ISSUE_TEMPLATE/01_defect_rca.yml`](file:///d:/JerminaStudio/JerminaDev/.github/ISSUE_TEMPLATE/01_defect_rca.yml)).
 - **Step 2 (Systemic Fix):** Fix the architectural contract (Pydantic v2 model, interface, base class).
 - **Step 3 (Defect Fix):** Resolve the localized bug.
 - **Step 4 (Regression Lock):** Write a dedicated isolated `pytest` unit test reproducing the exact failure before merging to `dev`.

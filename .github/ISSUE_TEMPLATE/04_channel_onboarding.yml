@@ -1,0 +1,66 @@
+name: "📺 Channel Onboarding (Підключення нового каналу)"
+description: "Реєстрація нового каналу контенту: ніша, фірмовий стиль, голосовий архетип та конфігурація"
+title: "channel([channel_id]): назва каналу"
+labels: ["type:channel-onboard", "priority:medium-p2"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### 🎨 Реєстрація нового каналу в екосистемі Jemini
+        Новий канал вимагає додавання у `ChannelRegistry` ([`src/jemini/core/context.py`](file:///d:/JerminaStudio/JerminaDev/src/jemini/core/context.py)), визначення голосового архетипу Gemini 3.8 Live та налаштування кольорів Remotion.
+
+  - type: input
+    id: channel_id
+    attributes:
+      label: "Ідентифікатор каналу (channel_id)"
+      description: "Унікальний технічний slug (snake_case)"
+      placeholder: "ai_breakthroughs"
+    validations:
+      required: true
+
+  - type: input
+    id: display_name
+    attributes:
+      label: "Відображуване ім'я каналу"
+      placeholder: "AI Breakthroughs Lab"
+    validations:
+      required: true
+
+  - type: input
+    id: accent_color
+    attributes:
+      label: "Акцентний HEX-колір брендингу"
+      description: "Колір для неонових спалахів Remotion, хуків та HUD"
+      placeholder: "#FF0055"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: voice_archetype
+    attributes:
+      label: "Голосовий архетип Gemini 3.8 Live"
+      description: "Оберіть голос із затвердженого каталогу Golden Acting Standard"
+      options:
+        - "Zephyr (Драйв, гумор, динаміка, іронія)"
+        - "Fenrir (Брутальний бас, кіборг, технічний тон)"
+        - "Aoede (Шепіт, спокусливий тон, таємничість)"
+        - "Kore (Крихкий андроїд, інтелігентний тон)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: channel_persona
+    attributes:
+      label: "Опис персони та ніші (System Prompt Context)"
+      description: "Хто ведучий каналу? Яка місія, цільова аудиторія та емоційний заряд?"
+      placeholder: "Канал фокусується на швидких оглядах проривів у нейромережах для технічної аудиторії..."
+    validations:
+      required: true
+
+  - type: input
+    id: default_tags
+    attributes:
+      label: "Хештеги за замовчуванням"
+      placeholder: "#Shorts #AI #TechTrends #Coding"
+    validations:
+      required: true

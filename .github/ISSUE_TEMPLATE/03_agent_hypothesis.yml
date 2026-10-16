@@ -1,0 +1,74 @@
+name: "🧠 Agent Hypothesis (Автономна гіпотеза розвитку каналу)"
+description: "Гіпотеза віральності або оптимізації утримання від Trend Scout / Retention Analytics"
+title: "hypothesis([channel]): короткий зміст гіпотези"
+labels: ["type:agent-hypothesis", "priority:medium-p2"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### 🤖 Автономна гіпотеза контенту (Self-Evolution Loop)
+        Ця форма використовується автономними агентами (`Trend Scout`, `Feedback Loop`, `Quality Auditor`) або людиною-оператором для висунення перевірюваних гіпотез покращення відео.
+
+  - type: dropdown
+    id: channel
+    attributes:
+      label: "Цільовий канал"
+      options:
+        - "channel:stickman_lab (Stickman Lab - 2.5D сатира, ШІ-технології)"
+        - "channel:cyber_matrix (Cyber Matrix - Кібербезпека, матриця, термінал)"
+        - "channel:crypto_pulse (Crypto Pulse - Web3, волатильність, крипто-драма)"
+        - "channel:science_genesis (Science Genesis - Квантова фізика, еволюція, космос)"
+        - "channel:global (Загальносистемна гіпотеза для всіх каналів)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: origin
+    attributes:
+      label: "Джерело гіпотези (Origin)"
+      options:
+        - "origin:agent-scout (Згенеровано скаутом трендів на базі Flash-Lite)"
+        - "origin:agent-retention (Згенеровано аналізатором відтоку аудиторії)"
+        - "origin:virtual-art-director (Виявлено валідатором якості відео)"
+        - "origin:human (Сформульовано людиною-оператором)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: observation
+    attributes:
+      label: "1. Спостереження (Observation)"
+      description: "Які конкретні дані або сигнали викликали цю гіпотезу? (Наприклад: падіння хука до 42% при повільному старті)"
+      placeholder: "Аналіз останніх 5 роликів каналу cyber_matrix показав падіння утримання на перших 3 секундах через надто складну термінологію в першій репліці."
+    validations:
+      required: true
+
+  - type: textarea
+    id: hypothesis
+    attributes:
+      label: "2. Гіпотеза (Hypothesis)"
+      description: "Що саме ми змінюємо і який ефект очікуємо отримати?"
+      placeholder: "Якщо починати першу фразу з провокативного застереження ('ТВІЙ ПАРОЛЬ ВЖЕ ЗЛИЛИ!') та анімації 'surprised', утримання перших 3 секунд зросте на 15-20%."
+    validations:
+      required: true
+
+  - type: textarea
+    id: experiment_plan
+    attributes:
+      label: "3. План експерименту (Experiment Plan)"
+      description: "Як саме система протестує цю гіпотезу? (Тема ролика, налаштування хука, голос)"
+      placeholder: |
+        1. Згенерувати тестовий ролик на тему 'Zero-Day Password Breaches'.
+        2. Застосувати оновлений KineticHook з червоним акцентом.
+        3. Відправити на модерацію оператору (`operator --review`).
+    validations:
+      required: true
+
+  - type: input
+    id: success_metric
+    attributes:
+      label: "4. Критерій успіху (Success Metric)"
+      description: "Числова метрика валідації гіпотези"
+      placeholder: "3s Hook Rate >= 65.0% та загальний бал валідатора >= 8.5/10.0"
+    validations:
+      required: true

@@ -1,0 +1,36 @@
+name: "🔧 Task / Chore (Технічний борг, рефакторинг, залежності)"
+description: "Оновлення інфраструктури, скриптів, документації або очищення технічного боргу"
+title: "chore([comp]): короткий опис завдання"
+labels: ["type:chore", "priority:low-p3"]
+body:
+  - type: dropdown
+    id: category
+    attributes:
+      label: "Категорія робіт"
+      options:
+        - "Dependencies (Оновлення версій бібліотек або Node пакетів)"
+        - "Refactoring (Поліпшення архітектури без зміни функціональності)"
+        - "Documentation (Оновлення гайдів, матриць готовності, скілів)"
+        - "Performance (Оптимізація часу рендеру або споживання пам'яті)"
+        - "Tooling (Скрипти автоматизації, лінтери, конфігурація)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: "Опис завдання та контекст"
+      placeholder: "Що саме потребує оновлення або спрощення? Які файли зачіпаються?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: "Критерії готовності (Acceptance Criteria)"
+      placeholder: |
+        - [ ] Усі 39+ юніт-тестів проходять без помилок
+        - [ ] Лінтер ruff check завершується з кодом 0
+        - [ ] Оновлено документацію у README/CONTRIBUTING
+    validations:
+      required: true

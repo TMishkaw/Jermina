@@ -1,0 +1,69 @@
+name: "✨ Core Feature (Новий функціонал / розширення ядра)"
+description: "Пропозиція нового модуля, інтеграції чи розширення пайплайну Jemini"
+title: "feat([comp]): короткий опис функціоналу"
+labels: ["type:core-feature", "priority:medium-p2"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### 🚀 Специфікація нової функціональності
+        Опишіть архітектурну цінність нового функціоналу для автономного продакшну Jemini.
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: "Компонент / Підсистема"
+      options:
+        - "core (Ядро, Контекст, Моделі)"
+        - "rotator (Key Rotator, Маршрутизація моделей)"
+        - "voice-live (Gemini 3.8 Live API, Синтез мовлення)"
+        - "remotion (Композиції, Шейдери, VFX, Анімація)"
+        - "database (PostgreSQL, Схеми, Пам'ять)"
+        - "publishing (Платформи публікації: YouTube, TikTok)"
+        - "analytics (Аналітика, Retention, Feedback Loop)"
+        - "scheduling (Скаутинг трендів, Черга генерації)"
+        - "operator (Пульт модерації, Human-in-the-Loop)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: user_story
+    attributes:
+      label: "User Story / Архітектурна мета"
+      description: "Для кого призначена ця функція та яку проблему вона вирішує?"
+      placeholder: "Як оператор/система, я хочу [що саме робити], щоб [який результат отримати]."
+    validations:
+      required: true
+
+  - type: textarea
+    id: technical_design
+    attributes:
+      label: "Технічний дизайн та інтерфейс"
+      description: "Опишіть запропоновані класи, методи, моделі Pydantic або CLI команди"
+      placeholder: |
+        - Модуль: src/jemini/...
+        - Нові інтерфейси / методи:
+        - Зміни в БД (якщо потрібні міграції):
+    validations:
+      required: true
+
+  - type: textarea
+    id: test_plan
+    attributes:
+      label: "План тестування (Test Plan)"
+      description: "Які нові тести необхідно створити у tests/ для гарантії 100% pass rate?"
+      placeholder: |
+        - Юніт-тест: tests/test_...py
+        - Mock-стратегія для API або рендеру:
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: constraints
+    attributes:
+      label: "Дотримання технічних обмежень проєкту"
+      options:
+        - label: "Використовується виключно modern Gemini SDK (`google-genai`), заборонені застарілі `gemini-1.5-*`"
+          required: true
+        - label: "Код буде суворо типізований (mypy/ruff) та розроблятиметься у гілці `dev`"
+          required: true

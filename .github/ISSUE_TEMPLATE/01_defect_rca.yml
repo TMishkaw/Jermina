@@ -1,0 +1,102 @@
+name: "🔴 RCA Defect (Повідомлення про дефект / баг)"
+description: "Опис дефекту за обов'язковим протоколом Root-Cause Analysis (Кроки 1-4 з AGENTS.md)"
+title: "fix([comp]): короткий опис проблеми"
+labels: ["type:defect-rca", "priority:high-p1"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### 🛡️ Jemini Root-Cause First Protocol
+        Перед створенням дефекту переконайтеся, що ви ознайомлені з політикою **Zero Quick-Fix** (заборона сліпих `try-except pass` або тимчасових латок).
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: "Компонент / Модуль"
+      description: "Оберіть підсистему, в якій виявлено дефект"
+      options:
+        - "core (Ядро, Контекст, Моделі)"
+        - "rotator (Key Rotator, 429 Hot Standby)"
+        - "voice-live (Gemini 3.8 Live API, WebSocket, RMS)"
+        - "remotion (Stickman Rig, HUD Blueprint, VFX, Рендер)"
+        - "database (PostgreSQL, pgvector, Міграції)"
+        - "publishing (YouTube Shorts Publisher, OAuth2)"
+        - "analytics (Retention Feedback Loop, Самонавчання)"
+        - "scheduling (Trend Scout, Production Queue)"
+        - "operator (Operator Review Control Plane)"
+        - "cli (CLI-інтерфейс, Аргументи, E2E)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: "Рівень критичності"
+      options:
+        - "priority:blocker-p0 (Критичний блокер: крах рендеру або витік пам'яті/квот)"
+        - "priority:high-p1 (Високий: ламає ключовий функціонал каналу або сцени)"
+        - "priority:medium-p2 (Середній: некоректна поведінка, є обхідний шлях)"
+        - "priority:low-p3 (Низький: косметична або другорядна помилка)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: symptom
+    attributes:
+      label: "1. Симптом та кроки відтворення"
+      description: "Що саме пішло не так? Наведіть точну команду або вхідні дані."
+      placeholder: |
+        Команда: python -m jemini.cli render --channel cyber_matrix ...
+        Очікувана поведінка: ...
+        Фактична поведінка: ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: "Трейсбек та логи помилки"
+      description: "Вставте повний стек-трейс з терміналу або лог-файлу"
+      render: shell
+
+  - type: textarea
+    id: rca_analysis
+    attributes:
+      label: "2. Root-Cause Analysis (Крок 1 протоколу RCA)"
+      description: "Чому архітектурний контракт, схема або типізація пропустили цю помилку?"
+      placeholder: |
+        Чому виник збій на рівні контракту:
+        - Яка Pydantic модель або інтерфейс були занадто широкими/неточними?
+        - Чому статичний аналізатор (ruff/mypy) або тести не виявили це заздалегідь?
+    validations:
+      required: true
+
+  - type: textarea
+    id: systemic_fix_plan
+    attributes:
+      label: "3. План системного виправлення (Кроки 2-3 протоколу RCA)"
+      description: "Як буде змінено системний контракт та локалізовано дефект?"
+      placeholder: |
+        - Крок 2 (Systemic Fix): оновлення базової моделі / валідатора / схеми БД.
+        - Крок 3 (Defect Fix): точкове виправлення логіки виконання.
+    validations:
+      required: true
+
+  - type: input
+    id: regression_test
+    attributes:
+      label: "4. Замок регресії (Крок 4 протоколу RCA)"
+      description: "Назва нового або розширеного юніт-тесту у tests/, який зафіксує захист від цієї помилки"
+      placeholder: "tests/test_operator.py::test_operator_reject_and_archive"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: compliance
+    attributes:
+      label: "Підтвердження стандартів якості"
+      options:
+        - label: "Я підтверджую, що виправлення не використовує сліпих `try-except pass` (Zero Quick-Fix Policy)"
+          required: true
+        - label: "Виправлення буде покрито ізольованим юніт-тестом з проходженням `pytest tests/ -v`"
+          required: true
