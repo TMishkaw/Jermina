@@ -1,7 +1,13 @@
 import React from "react";
 import { useCurrentFrame, useVideoConfig } from "remotion";
 import { FacialExpressions, EyeExpression, MouthExpression } from "./FacialExpressions";
-import { getPoseForFrame, AnimationType, StickmanPose } from "./kinematic_presets";
+import {
+  getPoseForFrame,
+  getSequencedPoseForFrame,
+  AnimationType,
+  StickmanPose,
+  StickmanCueTimelineItem,
+} from "./kinematic_presets";
 
 export interface StickmanRigProps {
   animation?: AnimationType;
@@ -18,6 +24,9 @@ export interface StickmanRigProps {
   torsoLength?: number;
   limbLength?: number;
   prop?: "microphone" | "sword" | "coffee" | "laptop" | "heart" | "stop_sign" | "watch" | "none";
+  emoji?: string | null;
+  cues?: StickmanCueTimelineItem[];
+  audioRms?: number;
 }
 
 export const StickmanRig: React.FC<StickmanRigProps> = ({
@@ -35,12 +44,19 @@ export const StickmanRig: React.FC<StickmanRigProps> = ({
   torsoLength = 90,
   limbLength = 55,
   prop = "none",
+  cues,
+  audioRms = 0.05,
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  // Compute calculated kinematic pose for the current frame
-  const computedPose = getPoseForFrame(animation, frame, fps);
+  // Compute calculated kinematic pose with smooth transition blending & secondary motion
+  let computedPose: StickmanPose;
+  if (cues && cues.length > 0) {
+    computedPose = getSequencedPoseForFrame(cues, frame, fps, audioRms, 12);
+  } else {
+    computedPose = getPoseForFrame(animation, frame, fps, audioRms);
+  }
   const pose: StickmanPose = { ...computedPose, ...customPose };
 
   const rootY = y + pose.rootYOffset;
@@ -187,16 +203,20 @@ export const StickmanRig: React.FC<StickmanRigProps> = ({
           strokeLinecap="round"
         />
 
-        {/* Torso Spine */}
-        <line
-          x1={0}
-          y1={shoulderY}
-          x2={0}
-          y2={hipY}
-          stroke={color}
-          strokeWidth={strokeWidth}
-          strokeLinecap="round"
-        />
+        {/* Organic Curved Torso Spine */}
+        {(() => {
+          const spineBend = (pose.spineCurvature ?? 0) * 1.6;
+          const midY = (shoulderY + hipY) / 2;
+          return (
+            <path
+              d={`M 0 ${hipY} Q ${spineBend} ${midY} 0 ${shoulderY}`}
+              fill="none"
+              stroke={color}
+              strokeWidth={strokeWidth}
+              strokeLinecap="round"
+            />
+          );
+        })()}
 
         {/* Left Arm (behind body in 2.5D layering) */}
         <g id="left-arm">

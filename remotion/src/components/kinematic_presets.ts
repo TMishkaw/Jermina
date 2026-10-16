@@ -8,6 +8,7 @@ export interface StickmanPose {
   rootXOffset: number;        // Horizontal sway in pixels
   torsoAngle: number;         // Lean in degrees
   headTilt: number;           // Head tilt in degrees
+  spineCurvature?: number;    // Organic spine curve flex in degrees
   
   // Left Arm (degrees)
   leftShoulderAngle: number;
@@ -50,10 +51,89 @@ export type AnimationType =
   | "punch"
   | "celebrate";
 
+export function interpolatePose(
+  poseA: StickmanPose,
+  poseB: StickmanPose,
+  progress: number
+): StickmanPose {
+  const p = Math.max(0, Math.min(1, progress));
+  // Smoothstep S-curve for organic acceleration and deceleration
+  const t = p * p * (3 - 2 * p);
+  const lerp = (a: number, b: number) => a + (b - a) * t;
+
+  return {
+    rootYOffset: lerp(poseA.rootYOffset, poseB.rootYOffset),
+    rootXOffset: lerp(poseA.rootXOffset, poseB.rootXOffset),
+    torsoAngle: lerp(poseA.torsoAngle, poseB.torsoAngle),
+    headTilt: lerp(poseA.headTilt, poseB.headTilt),
+    spineCurvature: lerp(poseA.spineCurvature ?? 0, poseB.spineCurvature ?? 0),
+
+    leftShoulderAngle: lerp(poseA.leftShoulderAngle, poseB.leftShoulderAngle),
+    leftElbowAngle: lerp(poseA.leftElbowAngle, poseB.leftElbowAngle),
+
+    rightShoulderAngle: lerp(poseA.rightShoulderAngle, poseB.rightShoulderAngle),
+    rightElbowAngle: lerp(poseA.rightElbowAngle, poseB.rightElbowAngle),
+
+    leftHipAngle: lerp(poseA.leftHipAngle, poseB.leftHipAngle),
+    leftKneeAngle: lerp(poseA.leftKneeAngle, poseB.leftKneeAngle),
+
+    rightHipAngle: lerp(poseA.rightHipAngle, poseB.rightHipAngle),
+    rightKneeAngle: lerp(poseA.rightKneeAngle, poseB.rightKneeAngle),
+
+    talkingCadence: lerp(poseA.talkingCadence, poseB.talkingCadence),
+  };
+}
+
+export interface StickmanCueTimelineItem {
+  fromFrame: number;
+  durationInFrames: number;
+  animation: AnimationType;
+  eyeType?: any;
+  mouthType?: any;
+  prop?: any;
+  emoji?: string | null;
+  customPose?: Partial<StickmanPose>;
+}
+
+export function getSequencedPoseForFrame(
+  cues: StickmanCueTimelineItem[],
+  frame: number,
+  fps: number = 30,
+  rms: number = 0.05,
+  transitionDurationFrames: number = 12
+): StickmanPose {
+  if (!cues || cues.length === 0) {
+    return getPoseForFrame("idle", frame, fps, rms);
+  }
+
+  let activeIdx = cues.findIndex(
+    (c) => frame >= c.fromFrame && frame < c.fromFrame + c.durationInFrames
+  );
+  if (activeIdx === -1) {
+    activeIdx = frame >= cues[cues.length - 1].fromFrame ? cues.length - 1 : 0;
+  }
+
+  const currentCue = cues[activeIdx];
+  const currentBase = getPoseForFrame(currentCue.animation, frame, fps, rms);
+  const currentPose: StickmanPose = { ...currentBase, ...currentCue.customPose };
+
+  if (activeIdx === 0 || frame >= currentCue.fromFrame + transitionDurationFrames) {
+    return currentPose;
+  }
+
+  const prevCue = cues[activeIdx - 1];
+  const prevBase = getPoseForFrame(prevCue.animation, frame, fps, rms);
+  const prevPose: StickmanPose = { ...prevBase, ...prevCue.customPose };
+
+  const progress = (frame - currentCue.fromFrame) / transitionDurationFrames;
+  return interpolatePose(prevPose, currentPose, progress);
+}
+
 export function getPoseForFrame(
   animation: AnimationType,
   frame: number,
-  fps: number = 30
+  fps: number = 30,
+  rms: number = 0.05
 ): StickmanPose {
   const time = frame / fps;
   const twoPi = Math.PI * 2;
@@ -133,42 +213,56 @@ export function getPoseForFrame(
     }
 
     case "talk": {
-      // Natural gesturing: right arm expresses, left arm relaxed
-      const gestureSpeed = 1.8;
-      const armWave = Math.sin(time * gestureSpeed * twoPi) * 22;
-      const forearmWave = Math.cos(time * gestureSpeed * twoPi) * 25;
-      const breathing = Math.sin(time * 0.8 * twoPi) * 3;
-      const speechSync = (Math.sin(time * 6 * twoPi) + 1) / 2;
+      // Natural organic human speech gesturing with follow-through and secondary motion
+      const gestureSpeed = 1.6;
+      const energyMultiplier = 0.8 + Math.min(1.2, rms * 8);
+
+      // Upper arm gesture
+      const armPhase = time * gestureSpeed * twoPi;
+      const armWave = Math.sin(armPhase) * 18 * energyMultiplier;
+
+      // Forearm lags upper arm by ~90ms (overlapping action)
+      const forearmPhase = (time - 0.09) * gestureSpeed * twoPi;
+      const forearmWave = Math.sin(forearmPhase) * 22 * energyMultiplier;
+
+      // Breathing + vocal emphasis bounce
+      const breathing = Math.sin(time * 0.9 * twoPi) * 2.5 + (rms * 10);
+      const spineFlex = Math.sin(time * 0.7 * twoPi) * 3;
+
+      // Head nods gently to speech syllables
+      const headNod = Math.sin(time * 3.0 * twoPi) * (2 + rms * 12);
 
       return {
         rootYOffset: breathing,
-        rootXOffset: Math.sin(time * 0.4 * twoPi) * 2,
-        torsoAngle: 1 + Math.sin(time * 0.8 * twoPi) * 2,
-        headTilt: Math.sin(time * 1.2 * twoPi) * 4,
-        leftShoulderAngle: -5,
-        leftElbowAngle: 10,
+        rootXOffset: Math.sin(time * 0.45 * twoPi) * 2,
+        torsoAngle: 1.5 + Math.sin(time * 0.7 * twoPi) * 2,
+        headTilt: -headNod * 0.4,
+        spineCurvature: spineFlex,
+        leftShoulderAngle: -8 + Math.sin(time * 0.9 * twoPi) * 3,
+        leftElbowAngle: 18 + Math.sin(time * 1.1 * twoPi) * 4,
         rightShoulderAngle: -35 + armWave,
         rightElbowAngle: 45 + forearmWave,
-        leftHipAngle: 0,
-        leftKneeAngle: 0,
-        rightHipAngle: 5,
-        rightKneeAngle: 2,
-        talkingCadence: speechSync,
+        leftHipAngle: -2,
+        leftKneeAngle: 3,
+        rightHipAngle: 3,
+        rightKneeAngle: 4,
+        talkingCadence: Math.min(1.0, Math.max(0.1, rms * 14)),
       };
     }
 
     case "point_up":
     case "point": {
-      const breathing = Math.sin(time * 1.0 * twoPi) * 3;
-      const pointSway = Math.sin(time * 1.5 * twoPi) * 4;
-      const speechSync = (Math.sin(time * 5 * twoPi) + 1) / 2;
+      const breathing = Math.sin(time * 0.9 * twoPi) * 2.5;
+      const pointSway = Math.sin(time * 1.2 * twoPi) * 3;
+      const speechSync = Math.min(1.0, Math.max(0.2, rms * 12));
       return {
         rootYOffset: breathing,
         rootXOffset: Math.sin(time * 0.5 * twoPi) * 2,
         torsoAngle: 2 + Math.sin(time * 0.8 * twoPi) * 1.5,
-        headTilt: 4 + Math.sin(time * 1.2 * twoPi) * 3,
-        leftShoulderAngle: -10 + Math.sin(time * 1.1 * twoPi) * 6,
-        leftElbowAngle: 25 + Math.sin(time * 1.4 * twoPi) * 10,
+        headTilt: 4 + Math.sin(time * 1.2 * twoPi) * 2.5,
+        spineCurvature: 2,
+        leftShoulderAngle: -10 + Math.sin(time * 1.1 * twoPi) * 5,
+        leftElbowAngle: 25 + Math.sin(time * 1.4 * twoPi) * 8,
         rightShoulderAngle: -80 + pointSway, // dynamic upward/forward point
         rightElbowAngle: 8,   // straight pointing arm with micro-flex
         leftHipAngle: -2,
@@ -181,13 +275,14 @@ export function getPoseForFrame(
 
     case "point_user": {
       // Directly points index finger at the camera/user with assertive authority
-      const nod = Math.sin(time * 2.5 * twoPi) * 3;
+      const nod = Math.sin(time * 2.5 * twoPi) * (2 + rms * 8);
       const pulse = Math.sin(time * 3 * twoPi) * 2;
       return {
         rootYOffset: Math.sin(time * 0.8 * twoPi) * 2,
         rootXOffset: 0,
-        torsoAngle: 6, // lean toward camera
+        torsoAngle: 5.5, // lean toward camera
         headTilt: 2 + nod,
+        spineCurvature: 3.5,
         leftShoulderAngle: 22, // hand confidently placed on hip
         leftElbowAngle: 105,
         rightShoulderAngle: -68 + pulse, // arm aimed straight at viewer
@@ -196,7 +291,7 @@ export function getPoseForFrame(
         leftKneeAngle: 10,
         rightHipAngle: 12,
         rightKneeAngle: 14,
-        talkingCadence: (Math.sin(time * 6 * twoPi) + 1) / 2,
+        talkingCadence: Math.min(1.0, Math.max(0.15, rms * 12)),
       };
     }
 
@@ -207,7 +302,8 @@ export function getPoseForFrame(
         rootYOffset: Math.sin(time * 0.7 * twoPi) * 2,
         rootXOffset: -2,
         torsoAngle: -4,
-        headTilt: -22, // tilted sharply upward watching the emoji
+        headTilt: -20, // tilted sharply upward watching the emoji
+        spineCurvature: -3,
         leftShoulderAngle: -15,
         leftElbowAngle: 30,
         rightShoulderAngle: -125 + sway, // high diagonal aim
@@ -216,7 +312,7 @@ export function getPoseForFrame(
         leftKneeAngle: 6,
         rightHipAngle: 8,
         rightKneeAngle: 4,
-        talkingCadence: 0.7,
+        talkingCadence: Math.min(1.0, Math.max(0.2, rms * 12)),
       };
     }
 
@@ -228,6 +324,7 @@ export function getPoseForFrame(
         rootXOffset: 0,
         torsoAngle: -7 + tension, // recoil backwards
         headTilt: -2,
+        spineCurvature: -5,
         leftShoulderAngle: -75, // both hands thrust forward
         leftElbowAngle: 12,
         rightShoulderAngle: -80,
@@ -236,19 +333,20 @@ export function getPoseForFrame(
         leftKneeAngle: 18,
         rightHipAngle: 14,
         rightKneeAngle: 16,
-        talkingCadence: 0.9,
+        talkingCadence: Math.min(1.0, Math.max(0.2, rms * 12)),
       };
     }
 
     case "heart_hands": {
       // Both arms arch above head to sculpt a pulsating heart
-      const heartbeat = Math.abs(Math.sin(time * 2.5 * twoPi)) * 8;
-      const pulseArm = Math.sin(time * 2.5 * twoPi) * 4;
+      const heartbeat = Math.abs(Math.sin(time * 2.5 * twoPi)) * 6;
+      const pulseArm = Math.sin(time * 2.5 * twoPi) * 3;
       return {
         rootYOffset: -heartbeat,
         rootXOffset: 0,
         torsoAngle: 0,
         headTilt: -4, // loving upward gaze
+        spineCurvature: 0,
         leftShoulderAngle: -135 + pulseArm,
         leftElbowAngle: 80,
         rightShoulderAngle: -135 - pulseArm,
@@ -257,18 +355,19 @@ export function getPoseForFrame(
         leftKneeAngle: 6,
         rightHipAngle: 6,
         rightKneeAngle: 6,
-        talkingCadence: 0.85,
+        talkingCadence: Math.min(1.0, Math.max(0.2, rms * 12)),
       };
     }
 
     case "watch_time": {
       // Checking watch on left wrist, right hand taps wrist
-      const tap = Math.sin(time * 5 * twoPi) * 10;
+      const tap = Math.sin(time * 4 * twoPi) * 8;
       return {
         rootYOffset: 0,
         rootXOffset: 0,
         torsoAngle: 3,
         headTilt: 16, // looking down at left wrist
+        spineCurvature: 2,
         leftShoulderAngle: -42, // wrist held in front of chest
         leftElbowAngle: 90,
         rightShoulderAngle: -35 + tap * 0.4,
@@ -277,7 +376,7 @@ export function getPoseForFrame(
         leftKneeAngle: 4,
         rightHipAngle: 6,
         rightKneeAngle: 6,
-        talkingCadence: 0.5,
+        talkingCadence: Math.min(1.0, Math.max(0.1, rms * 10)),
       };
     }
 
