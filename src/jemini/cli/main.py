@@ -51,6 +51,7 @@ async def run_e2e_render(
     output_dir: str | Path = "output",
     mock_mode: bool = False,
     skip_validation: bool = False,
+    publish_youtube: bool = False,
     max_correction_attempts: int = 2,
 ) -> dict[str, Any]:
     """Executes the full autonomous pipeline with self-correction."""
@@ -165,6 +166,35 @@ async def run_e2e_render(
         if current_status != ValidationStatus.PASSED:
             logger.warning("Video flagged with [NEEDS_REVIEW]: score is below optimal threshold.")
 
+    # 5. YouTube Shorts Publishing (Optional Gate)
+    published_res = None
+    if publish_youtube:
+        from jemini.publishing.youtube_publisher import (
+            PublishingPrivacyStatus,
+            YouTubePublisher,
+            YouTubeShortMetadata,
+        )
+
+        publisher = YouTubePublisher()
+        if not publisher.has_credentials() and not mock_mode:
+            logger.warning(
+                "YouTube publishing requested, but client secrets not found at 'config/client_secret.json'.\n"
+                "Please place OAuth2 client credentials at 'config/client_secret.json' to enable live uploads."
+            )
+        else:
+            logger.info("Publishing video to YouTube Shorts...")
+            published_res = await publisher.publish_short(
+                video_path=final_video,
+                metadata=YouTubeShortMetadata(
+                    title=short_script.title,
+                    description=f"{short_script.hook_text}\n\nСтворено повністю автономно через рушій Jemini.",
+                    privacy_status=PublishingPrivacyStatus.UNLISTED,
+                ),
+                channel_id=profile.channel_id,
+                mock_mode=mock_mode,
+            )
+            logger.info("✓ YouTube Short Published: %s", published_res.shorts_url)
+
     summary = {
         "title": short_script.title,
         "video_path": str(final_video),
@@ -172,6 +202,7 @@ async def run_e2e_render(
         "total_frames": pipeline_res.total_frames,
         "validation_score": validation_card.overall_score if validation_card else None,
         "validation_status": validation_card.status.value if validation_card else "SKIPPED",
+        "youtube_shorts_url": published_res.shorts_url if published_res else None,
     }
 
     summary_file = out_dir / "pipeline_summary.json"
@@ -179,6 +210,8 @@ async def run_e2e_render(
     logger.info("==================================================")
     logger.info("   PRODUCTION PIPELINE COMPLETED SUCCESSFULLY!    ")
     logger.info("   Video artifact: %s", final_video)
+    if published_res:
+        logger.info("   YouTube URL:    %s", published_res.shorts_url)
     logger.info("==================================================")
     return summary
 
@@ -276,6 +309,7 @@ def main():
     render_parser.add_argument("--output-dir", type=str, default="output", help="Destination folder for artifacts")
     render_parser.add_argument("--mock-mode", action="store_true", help="Execute in offline mock mode")
     render_parser.add_argument("--skip-validation", action="store_true", help="Skip multimodal validation loop")
+    render_parser.add_argument("--publish-youtube", action="store_true", help="Upload rendered video to YouTube Shorts")
 
     # Subcommand: test-readiness
     subparsers.add_parser("test-readiness", help="Run pre-flight Matrix Readiness Suite for QA handoff")
@@ -290,6 +324,7 @@ def main():
                 output_dir=args.output_dir,
                 mock_mode=args.mock_mode,
                 skip_validation=args.skip_validation,
+                publish_youtube=args.publish_youtube,
             )
         )
     elif args.command == "test-readiness":

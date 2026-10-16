@@ -53,6 +53,10 @@ output/
 config/
 *.keys.json
 keys.json
+*client_secret*.json
+*credentials*.json
+*token*.json
+oauth*.json
 .agents/mcp_config.json
 
 # Antigravity artifacts
