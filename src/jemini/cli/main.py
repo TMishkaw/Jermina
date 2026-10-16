@@ -923,6 +923,15 @@ def main():
     # Subcommand: test-readiness
     subparsers.add_parser("test-readiness", help="Run pre-flight Matrix Readiness Suite for QA handoff")
 
+    # Subcommand: db-export
+    db_exp_parser = subparsers.add_parser("db-export", help="Export sanitized database knowledge to Git-versioned JSON seeds (Zero-Leak)")
+    db_exp_parser.add_argument("--output-dir", type=str, default="seeds/sanitized_db", help="Destination folder for exported tables")
+
+    # Subcommand: db-restore
+    db_res_parser = subparsers.add_parser("db-restore", help="Restore sanitized database knowledge from Git-versioned JSON seeds")
+    db_res_parser.add_argument("--input-dir", type=str, default="seeds/sanitized_db", help="Source folder with JSON seeds")
+    db_res_parser.add_argument("--clear-existing", action="store_true", help="Clear existing records before restoring")
+
     args = parser.parse_args()
 
     if args.command == "render":
@@ -1048,6 +1057,22 @@ def main():
         success = asyncio.run(run_test_readiness())
         if not success:
             sys.exit(1)
+    elif args.command == "db-export":
+        from jemini.storage.sanitized_export import export_sanitized_db
+
+        summary = asyncio.run(export_sanitized_db(output_dir=args.output_dir))
+        print(f"✓ Database sanitized knowledge successfully exported to '{args.output_dir}':")
+        for t, count in summary.items():
+            print(f"  • {t}: {count} records")
+    elif args.command == "db-restore":
+        from jemini.storage.sanitized_export import restore_sanitized_db
+
+        summary = asyncio.run(
+            restore_sanitized_db(input_dir=args.input_dir, clear_existing=args.clear_existing)
+        )
+        print(f"✓ Database sanitized knowledge successfully restored from '{args.input_dir}':")
+        for t, count in summary.items():
+            print(f"  • {t}: {count} records")
 
 
 if __name__ == "__main__":

@@ -1,7 +1,9 @@
 """Statistical and Semantic Analysis of YouTube channel videos."""
 
 import asyncio
+
 from sqlalchemy import text
+
 from jemini.storage.database import AsyncSessionLocal
 
 

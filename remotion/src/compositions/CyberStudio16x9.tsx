@@ -17,6 +17,8 @@ export interface StickmanCue16x9 {
   eyeType: EyeExpression;
   mouthType: MouthExpression;
   prop?: "microphone" | "sword" | "coffee" | "laptop" | "none";
+  emoji?: string | null;
+  customPose?: Record<string, number>;
 }
 
 export interface SubtitleCue16x9 {
@@ -191,9 +193,11 @@ export const CyberStudio16x9: React.FC<{ config?: CyberStudio16x9Config }> = ({
             y={680}
             scale={1.75}
             animation={activeCue.animation}
+            customPose={activeCue.customPose}
             eyeType={activeCue.eyeType}
             mouthType={activeCue.mouthType}
             prop={activeCue.prop}
+            emoji={activeCue.emoji}
             color="#FFFFFF"
             glowColor={config.accentColor}
             strokeWidth={6}

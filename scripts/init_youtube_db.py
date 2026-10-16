@@ -1,6 +1,8 @@
 import asyncio
+
 from jemini.storage.database import engine
 from jemini.storage.models import Base
+
 
 async def init_tables():
     async with engine.begin() as conn:
